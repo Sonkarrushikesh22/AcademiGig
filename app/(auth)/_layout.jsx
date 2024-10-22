@@ -5,20 +5,10 @@ import { StatusBar } from "expo-status-bar";
 
 const AuthLayout = () => {
   return (
-    <Stack>
-    <Stack.Screen
-      name="sign-in"
-      options={{
-        headerShown: false,
-      }}
-    />
-    <Stack.Screen
-      name="sign-up"
-      options={{
-        headerShown: false,
-      }}
-    />
-  </Stack>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="sign-in" />
+      <Stack.Screen name="sign-up" />
+    </Stack>
   )
 }
 
