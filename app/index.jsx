@@ -31,7 +31,8 @@ const WelcomePage = () => {
             source={Img}
             resizeMode="contain"
           />
-          <TouchableOpacity style={styles.exploreButton}>
+          <TouchableOpacity style={styles.exploreButton}
+          onPress={() => router.push("/home")}>
             <Text style={styles.buttonText}>Explore Jobs</Text>
           </TouchableOpacity>
         </View>

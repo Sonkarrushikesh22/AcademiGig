@@ -3,9 +3,10 @@ import React from 'react'
 
 const TabsLayout = () => {
   return (
-    <View>
-      <Text>TabsLayout</Text>
-    </View>
+<Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="sign-in" />
+      <Stack.Screen name="sign-up" />
+    </Stack>
   )
 }
 
