@@ -35,6 +35,7 @@ const TabsLayout = () => {
         name="explore"
         options={{
           title: 'Explore',
+          headerShown: false ,
           tabBarIcon: ({ color }) => <FontAwesome size={30} name="compass" color={color} />,
         }}
       />
