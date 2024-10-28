@@ -34,6 +34,8 @@ const styles = StyleSheet.create({
     borderRadius: 45,
     fontSize: 16,
     color: "black",
+    borderEndColor:"black",
+    borderWidth:0.7
   },
   searchIcon: {
     position: "absolute",

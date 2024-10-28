@@ -24,7 +24,7 @@ const Styles = {
 
   },
   body: {
-    backgroundColor: "white",
+   // backgroundColor: "white",
     paddingHorizontal:20
   },
 };
