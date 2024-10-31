@@ -1,133 +1,236 @@
 import React, { useState } from 'react';
-import { View, Button, StyleSheet, ScrollView } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
 
-// Reusable Picker component
-const PickerComponent = ({ label, selectedValue, onValueChange, options }) => (
-  <View style={styles.fieldContainer}>
-    <Text>{label}</Text>
-    <Picker
-      selectedValue={selectedValue}
-      onValueChange={onValueChange}
-      style={styles.picker}
-    >
-      {options.map((option, index) => (
-        <Picker.Item key={index} label={option.label} value={option.value} />
-      ))}
-    </Picker>
-  </View>
-);
+} from 'react-native';
+import Slider from '@react-native-community/slider';
+import { MaterialIcons } from '@expo/vector-icons';
 
-const FilterForm = ({ onApplyFilters }) => {
-  const theme = useTheme(); // Access theme for styling
-  const [form, setForm] = useState({
-    category: '',
-    jobType: '',
-    salaryRange: '',
-    schedule: '',
-    experienceLevel: '',
-    remote: '',
-    shiftTiming: '',
-    startDate: new Date(),
-    duration: '',
+const FilterForm = ({ onApplyFilters, onClose }) => {
+  const [filters, setFilters] = useState({
+    jobType: 'all',
+    experienceLevel: 'all',
+    salary: {
+      min: 0,
+      max: 200000,
+    },
+    location: 'all',
+    industry: 'all',
   });
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
-  const handleDateConfirm = (date) => {
-    setForm((prevForm) => ({ ...prevForm, startDate: date }));
-    setDatePickerVisibility(false);
-  };
+  const jobTypes = ['all', 'full-time', 'part-time', 'contract', 'internship'];
+  const experienceLevels = ['all', 'entry', 'intermediate', 'senior', 'lead'];
+  const locations = ['all', 'remote', 'on-site', 'hybrid'];
+  const industries = ['all', 'technology', 'healthcare', 'finance', 'education', 'retail'];
 
   const handleApplyFilters = () => {
-    onApplyFilters(form);
+    onApplyFilters(filters);
+    onClose();
   };
 
+  const resetFilters = () => {
+    setFilters({
+      jobType: 'all',
+      experienceLevel: 'all',
+      salary: {
+        min: 0,
+        max: 200000,
+      },
+      location: 'all',
+      industry: 'all',
+    });
+  };
+
+  const renderSelector = (title, options, currentValue, field) => (
+    <View style={styles.filterSection}>
+      <Text style={styles.label}>{title}</Text>
+      <View style={styles.optionsContainer}>
+        {options.map((option) => (
+          <TouchableOpacity
+            key={option}
+            style={[
+              styles.optionButton,
+              filters[field] === option && styles.optionButtonSelected,
+            ]}
+            onPress={() => setFilters({ ...filters, [field]: option })}
+          >
+            <Text
+              style={[
+                styles.optionText,
+                filters[field] === option && styles.optionTextSelected,
+              ]}
+            >
+              {option.charAt(0).toUpperCase() + option.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
   return (
-    <ScrollView style={styles.container}>
-      <PickerComponent
-        label="Job Category"
-        selectedValue={form.category}
-        onValueChange={(value) => setForm((prev) => ({ ...prev, category: value }))}
-        options={[
-          { label: 'Select a category', value: '' },
-          { label: 'Restaurant', value: 'Restaurant' },
-          { label: 'Retail', value: 'Retail' },
-          { label: 'Office Work', value: 'Office Work' },
-          { label: 'Delivery', value: 'Delivery' },
-          { label: 'Customer Service', value: 'Customer Service' },
-          { label: 'Education', value: 'Education' },
-        ]}
-      />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Filter Jobs</Text>
+        <TouchableOpacity onPress={onClose}>
+          <MaterialIcons name="close" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
 
-      <PickerComponent
-        label="Job Type"
-        selectedValue={form.jobType}
-        onValueChange={(value) => setForm((prev) => ({ ...prev, jobType: value }))}
-        options={[
-          { label: 'Select job type', value: '' },
-          { label: 'Part-Time', value: 'Part-Time' },
-          { label: 'Full-Time', value: 'Full-Time' },
-          { label: 'Internship', value: 'Internship' },
-          { label: 'Contract', value: 'Contract' },
-        ]}
-      />
+      <ScrollView style={styles.formContainer}>
+        {renderSelector('Job Type', jobTypes, filters.jobType, 'jobType')}
+        {renderSelector(
+          'Experience Level',
+          experienceLevels,
+          filters.experienceLevel,
+          'experienceLevel'
+        )}
 
-      <PickerComponent
-        label="Salary Range"
-        selectedValue={form.salaryRange}
-        onValueChange={(value) => setForm((prev) => ({ ...prev, salaryRange: value }))}
-        options={[
-          { label: 'Select salary range', value: '' },
-          { label: '< $500', value: '<500' },
-          { label: '$500–$1000', value: '500-1000' },
-          { label: '> $1000', value: '>1000' },
-        ]}
-      />
+        <View style={styles.filterSection}>
+          <Text style={styles.label}>Salary Range</Text>
+          <View style={styles.salaryContainer}>
+            <Text style={styles.salaryText}>
+              ${Math.round(filters.salary.min).toLocaleString()}
+            </Text>
+            <Text style={styles.salaryText}>
+              ${Math.round(filters.salary.max).toLocaleString()}
+            </Text>
+          </View>
+          <View style={styles.sliderContainer}>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={200000}
+              step={5000}
+              value={filters.salary.max}
+              minimumTrackTintColor="#007AFF"
+              maximumTrackTintColor="#ddd"
+              onValueChange={(value) =>
+                setFilters({
+                  ...filters,
+                  salary: { ...filters.salary, max: value },
+                })
+              }
+            />
+          </View>
+        </View>
 
-      <Text style={styles.label}>Start Date</Text>
-      <Button title="Select Date" onPress={() => setDatePickerVisibility(true)} />
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={handleDateConfirm}
-        onCancel={() => setDatePickerVisibility(false)}
-      />
+        {renderSelector('Location', locations, filters.location, 'location')}
+        {renderSelector('Industry', industries, filters.industry, 'industry')}
+      </ScrollView>
 
-      <PickerComponent
-        label="Duration"
-        selectedValue={form.duration}
-        onValueChange={(value) => setForm((prev) => ({ ...prev, duration: value }))}
-        options={[
-          { label: 'Select duration', value: '' },
-          { label: 'Less than 1 month', value: '<1 month' },
-          { label: '1–3 months', value: '1-3 months' },
-          { label: '3–6 months', value: '3-6 months' },
-          { label: '6 months or more', value: '6+ months' },
-        ]}
-      />
-
-      <Button title="Apply Filters" onPress={handleApplyFilters} />
-    </ScrollView>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.button, styles.resetButton]}
+          onPress={resetFilters}
+        >
+          <Text style={styles.buttonText}>Reset</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, styles.applyButton]}
+          onPress={handleApplyFilters}
+        >
+          <Text style={[styles.buttonText, styles.applyButtonText]}>Apply</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#fff',
+    padding: 16,
   },
-  fieldContainer: {
-    marginBottom: 16,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  picker: {
-    height: 50,
-    backgroundColor: '#f9f9f9',
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  formContainer: {
+    flex: 1,
+  },
+  filterSection: {
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  optionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+    marginHorizontal: 4,
+    marginVertical: 4,
+  },
+  optionButtonSelected: {
+    backgroundColor: '#007AFF',
+  },
+  optionText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  optionTextSelected: {
+    color: '#fff',
+  },
+  salaryContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 8,
+  },
+  salaryText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  sliderContainer: {
+    paddingHorizontal: 6,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+  },
+  button: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 8,
+    marginHorizontal: 8,
+    alignItems: 'center',
+  },
+  resetButton: {
+    backgroundColor: '#f5f5f5',
+  },
+  applyButton: {
+    backgroundColor: '#007AFF',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  applyButtonText: {
+    color: '#fff',
   },
 });
 

@@ -76,8 +76,8 @@ const Explore = () => {
     console.log("Search:", text);
   };
 
-  const handleFilter = () => {
-    console.log("Filter icon clicked");
+  const handleApplyFilters = (filters) => {
+    console.log('Applied filters:', filters);
   };
 
   const renderCategoryItem = ({ item }) => (
@@ -102,7 +102,7 @@ const Explore = () => {
           <SearchInput
             placeholder="Search for jobs..."
             onSearch={handleSearch}
-            onFilter={handleFilter}
+            onFilter={handleApplyFilters}
           />
  <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
           <View style={Styles.categoriesContainer}>

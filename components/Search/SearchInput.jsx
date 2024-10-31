@@ -1,8 +1,18 @@
-import React from "react";
-import { View, TextInput, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, TextInput, StyleSheet, Modal, TouchableOpacity } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
+import FilterForm from "./SearchFilter"; // Make sure this path matches your file structure
 
-const SearchInput = ({ placeholder, onSearch, onFilter }) => {
+const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
+  const [showFilterForm, setShowFilterForm] = useState(false);
+
+  const handleApplyFilters = (filters) => {
+    if (onApplyFilters) {
+      onApplyFilters(filters);
+    }
+    setShowFilterForm(false);
+  };
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -12,7 +22,30 @@ const SearchInput = ({ placeholder, onSearch, onFilter }) => {
         onChangeText={onSearch}
       />
       <Ionicons name="search" size={20} color="gray" style={styles.searchIcon} />
-      <Feather name="filter" size={20} color="black" style={styles.filterIcon} onPress={onFilter} />
+      <TouchableOpacity onPress={() => setShowFilterForm(true)}>
+        <Feather 
+          name="filter" 
+          size={20} 
+          color="black" 
+          style={styles.filterIcon} 
+        />
+      </TouchableOpacity>
+
+      <Modal
+        visible={showFilterForm}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFilterForm(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <FilterForm
+              onApplyFilters={handleApplyFilters}
+              onClose={() => setShowFilterForm(false)}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -22,20 +55,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 10,
-    
   },
   input: {
     flex: 1,
     height: 50,
-    borderRadius:45,
     paddingHorizontal: 10,
-    paddingRight: 30, // Space for search icon
+    paddingRight: 30,
     backgroundColor: "#f0f0f0",
     borderRadius: 45,
     fontSize: 16,
     color: "black",
-    borderEndColor:"black",
-    borderWidth:0.7
+    borderEndColor: "black",
+    borderWidth: 0.7,
   },
   searchIcon: {
     position: "absolute",
@@ -44,6 +75,17 @@ const styles = StyleSheet.create({
   },
   filterIcon: {
     marginLeft: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '80%',
   },
 });
 
