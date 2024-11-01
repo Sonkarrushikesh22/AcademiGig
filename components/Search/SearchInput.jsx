@@ -1,16 +1,24 @@
 import React, { useState } from "react";
 import { View, TextInput, StyleSheet, Modal, TouchableOpacity } from "react-native";
-import { Ionicons, Feather } from "@expo/vector-icons";
-import FilterForm from "./SearchFilter"; // Make sure this path matches your file structure
+import { Ionicons } from "@expo/vector-icons";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import FilterForm from "./SearchFilter";
 
 const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
   const [showFilterForm, setShowFilterForm] = useState(false);
-
+  const [searchText, setSearchText] = useState('');
+  
   const handleApplyFilters = (filters) => {
     if (onApplyFilters) {
       onApplyFilters(filters);
     }
     setShowFilterForm(false);
+  };
+
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch(searchText);
+    }
   };
 
   return (
@@ -19,18 +27,29 @@ const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
         style={styles.input}
         placeholder={placeholder || "Search..."}
         placeholderTextColor="gray"
-        onChangeText={onSearch}
+        onChangeText={setSearchText}
+        value={searchText}
+        onSubmitEditing={handleSearch}
+        returnKeyType="search"
       />
-      <Ionicons name="search" size={20} color="gray" style={styles.searchIcon} />
-      <TouchableOpacity onPress={() => setShowFilterForm(true)}>
-        <Feather 
-          name="filter" 
-          size={20} 
-          color="black" 
-          style={styles.filterIcon} 
+      <TouchableOpacity 
+        style={styles.searchIcon} 
+        onPress={handleSearch}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="search" size={20} color="gray" />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        onPress={() => setShowFilterForm(true)}
+        activeOpacity={0.7}
+      >
+        <MaterialCommunityIcons
+          name="tune-variant"
+          size={20}
+          color="black"
+          style={styles.filterIcon}
         />
       </TouchableOpacity>
-
       <Modal
         visible={showFilterForm}
         animationType="slide"
@@ -60,7 +79,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
     paddingHorizontal: 10,
-    paddingRight: 30,
+    paddingRight: 40, // Increased to prevent text from going under the search icon
     backgroundColor: "#f0f0f0",
     borderRadius: 45,
     fontSize: 16,
@@ -72,6 +91,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 45,
     top: 15,
+   // padding: 5, // Added padding to increase touch target
+    zIndex: 1, // Ensure the touchable is above the input
   },
   filterIcon: {
     marginLeft: 10,

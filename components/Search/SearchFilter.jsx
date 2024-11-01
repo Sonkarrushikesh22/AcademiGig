@@ -5,9 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-
+  TextInput,
 } from 'react-native';
-import Slider from '@react-native-community/slider';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const FilterForm = ({ onApplyFilters, onClose }) => {
@@ -42,6 +41,18 @@ const FilterForm = ({ onApplyFilters, onClose }) => {
       },
       location: 'all',
       industry: 'all',
+    });
+  };
+
+  const handleSalaryChange = (value, type) => {
+    // Remove non-numeric characters and convert to number
+    const numericValue = parseInt(value.replace(/[^0-9]/g, ''), 10) || 0;
+    setFilters({
+      ...filters,
+      salary: {
+        ...filters.salary,
+        [type]: numericValue,
+      },
     });
   };
 
@@ -92,30 +103,27 @@ const FilterForm = ({ onApplyFilters, onClose }) => {
 
         <View style={styles.filterSection}>
           <Text style={styles.label}>Salary Range</Text>
-          <View style={styles.salaryContainer}>
-            <Text style={styles.salaryText}>
-              ${Math.round(filters.salary.min).toLocaleString()}
-            </Text>
-            <Text style={styles.salaryText}>
-              ${Math.round(filters.salary.max).toLocaleString()}
-            </Text>
-          </View>
-          <View style={styles.sliderContainer}>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={200000}
-              step={5000}
-              value={filters.salary.max}
-              minimumTrackTintColor="#007AFF"
-              maximumTrackTintColor="#ddd"
-              onValueChange={(value) =>
-                setFilters({
-                  ...filters,
-                  salary: { ...filters.salary, max: value },
-                })
-              }
-            />
+          <View style={styles.salaryInputContainer}>
+            <View style={styles.salaryInputWrapper}>
+              <Text style={styles.salaryInputLabel}>Min</Text>
+              <TextInput
+                style={styles.salaryInput}
+                value={filters.salary.min.toString()}
+                onChangeText={(value) => handleSalaryChange(value, 'min')}
+                keyboardType="numeric"
+                placeholder="Min salary"
+              />
+            </View>
+            <View style={styles.salaryInputWrapper}>
+              <Text style={styles.salaryInputLabel}>Max</Text>
+              <TextInput
+                style={styles.salaryInput}
+                value={filters.salary.max.toString()}
+                onChangeText={(value) => handleSalaryChange(value, 'max')}
+                keyboardType="numeric"
+                placeholder="Max salary"
+              />
+            </View>
           </View>
         </View>
 
@@ -146,6 +154,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 16,
+    borderRadius:20
   },
   header: {
     flexDirection: 'row',
@@ -191,21 +200,26 @@ const styles = StyleSheet.create({
   optionTextSelected: {
     color: '#fff',
   },
-  salaryContainer: {
+  salaryInputContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
   },
-  salaryText: {
+  salaryInputWrapper: {
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  salaryInputLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  salaryInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
     fontSize: 14,
     color: '#333',
-  },
-  sliderContainer: {
-    paddingHorizontal: 6,
-  },
-  slider: {
-    width: '100%',
-    height: 40,
   },
   buttonContainer: {
     flexDirection: 'row',
