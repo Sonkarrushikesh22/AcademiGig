@@ -3,7 +3,8 @@ import React from 'react'
 
 const notifications = () => {
   return (
-    <View>
+   
+    <View >
       <Text>notifications</Text>
     </View>
   )
