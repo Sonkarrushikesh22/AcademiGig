@@ -1,4 +1,3 @@
-// components/auth/AuthStyles.js
 import { StyleSheet, Dimensions, Platform } from 'react-native';
 import { useMemo } from 'react';
 
@@ -12,7 +11,6 @@ const SPACING = {
   lg: height * 0.025,
   xl: height * 0.03,
   xxl: height * 0.04
-  
 };
 
 const COLORS = {
@@ -55,7 +53,6 @@ export const useAuthStyles = () => {
     },
     container1: {
       minHeight: height * 0.20,
-      //paddingBottom: height*0.01,
       flexShrink: 1
     },
     headerContainer: {
@@ -63,6 +60,11 @@ export const useAuthStyles = () => {
       justifyContent: 'space-between',
       marginTop: height * 0.02,
       marginBottom: height * 0.02,
+    },
+    headerActions: {
+      flexDirection: 'column',
+      alignItems: 'flex-end',
+      rowGap: SPACING.xs
     },
     headerText: {
       fontSize: TYPOGRAPHY.body,
@@ -73,10 +75,25 @@ export const useAuthStyles = () => {
       color: COLORS.white,
       fontWeight: 'bold',
     },
+    // skipButton: {
+    //   backgroundColor: COLORS.accent, // Button color
+    //   paddingVertical: SPACING.xs,    // Vertical padding
+    //   paddingHorizontal: SPACING.xs,  // Horizontal padding
+    //   borderRadius: DIMENSIONS.borderRadius.sm, // Rounded corners
+    //   alignItems: 'center',           // Center text horizontally
+    //   justifyContent: 'center',       // Center text vertically
+    // },
+    
+    skipText: {
+      fontSize: TYPOGRAPHY.body,
+      color: COLORS.white,            // Text color
+      fontWeight: 'normal',
+      paddingTop: 0,                  // Remove any padding on top (handled by skipButton)
+    },
+    
     logoContainer: {
       alignItems: 'center',
-      marginVertical: height*0.10,
-      //paddingTop: height*0.065,
+      marginVertical: height * 0.10,
     },
     logoText: {
       fontSize: TYPOGRAPHY.logo,
@@ -89,13 +106,11 @@ export const useAuthStyles = () => {
       borderTopLeftRadius: DIMENSIONS.borderRadius.lg,
       borderTopRightRadius: DIMENSIONS.borderRadius.lg,
       marginHorizontal: -20,
-      //marginTop: height*0.05,
-      elevation: Platform.select({ android: 5, ios: 0 }), // Platform-specific shadow
-      shadowColor: COLORS.text.primary, // iOS shadow
+      elevation: Platform.select({ android: 5, ios: 0 }),
+      shadowColor: COLORS.text.primary,
       shadowOffset: { width: 0, height: -2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
-      //flex: 1,
       flexGrow: 1
     },
     welcomeText: {
@@ -104,7 +119,6 @@ export const useAuthStyles = () => {
       color: COLORS.text.primary,
       textAlign: 'center',
       marginBottom: SPACING.sm,
-      
     },
     subText: {
       fontSize: TYPOGRAPHY.body,
@@ -129,7 +143,7 @@ export const useAuthStyles = () => {
       height: DIMENSIONS.inputHeight,
       borderRadius: DIMENSIONS.borderRadius.sm,
       alignItems: 'center',
-      justifyContent: 'center', // Added for better vertical centering
+      justifyContent: 'center',
       marginBottom: 10,
     },
     authButtonText: {
@@ -171,7 +185,7 @@ export const useAuthStyles = () => {
       padding: SPACING.md,
       borderRadius: DIMENSIONS.borderRadius.sm,
       width: '48%',
-      justifyContent: 'center', // Added for better centering
+      justifyContent: 'center',
     },
     socialIcon: {
       width: 20,
@@ -182,5 +196,6 @@ export const useAuthStyles = () => {
       fontSize: TYPOGRAPHY.body,
       color: COLORS.text.primary,
     },
+    
   }), []); // Empty dependency array since values are constants
 };

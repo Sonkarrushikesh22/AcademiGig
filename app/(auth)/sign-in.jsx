@@ -7,7 +7,12 @@ import { useRouter } from 'expo-router';
 const SignIn = () => {
   const router = useRouter();
   const styles = useAuthStyles ();
+
+const handleSkipToHome = useCallback(() => {
+  router.push('/home');
+}, [router]);
   
+
   const handleSignIn = useCallback(() => {
     router.push('/(app)');
   }, [router]);
@@ -23,6 +28,8 @@ const SignIn = () => {
       subtitle="Enter your details below"
       alternateAuthText="Don't have an account?"
       alternateAuthAction="Get Started"
+      onSkipPress={handleSkipToHome} // Added skip action here
+      skipText="Skip" // Added skip text to display on button
       onAlternateAuthPress={handleNavigateSignUp}
       socialDividerText="Or sign in with"
     >

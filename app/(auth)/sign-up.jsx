@@ -8,6 +8,10 @@ const SignIn = () => {
   const router = useRouter();
   const styles = useAuthStyles ();
   
+  const handleSkipToHome = useCallback(() => {
+    router.push('/home');
+  }, [router]);
+
   const handleSignIn = useCallback(() => {
     router.push('/(app)');
   }, [router]);
@@ -23,6 +27,8 @@ const SignIn = () => {
       subtitle="Enter your details below"
       alternateAuthText="Already have an account?"
       alternateAuthAction="Sign In"
+      onSkipPress={handleSkipToHome} // Added skip action here
+      skipText="Skip" // Added skip text to display on button
       onAlternateAuthPress={handleNavigateSignUp}
       socialDividerText="Or sign up with"
     >
