@@ -92,7 +92,7 @@ const FilterForm = ({ onApplyFilters, onClose }) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.formContainer}>
+      <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
         {renderSelector('Job Type', jobTypes, filters.jobType, 'jobType')}
         {renderSelector(
           'Experience Level',
@@ -101,7 +101,7 @@ const FilterForm = ({ onApplyFilters, onClose }) => {
           'experienceLevel'
         )}
 
-        <View style={styles.filterSection}>
+        <View style={styles.filterSection} >
           <Text style={styles.label}>Salary Range</Text>
           <View style={styles.salaryInputContainer}>
             <View style={styles.salaryInputWrapper}>
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 16,
+    padding: 20,
     borderRadius:20
   },
   header: {
