@@ -75,15 +75,7 @@ export const useAuthStyles = () => {
       color: COLORS.white,
       fontWeight: 'bold',
     },
-    // skipButton: {
-    //   backgroundColor: COLORS.accent, // Button color
-    //   paddingVertical: SPACING.xs,    // Vertical padding
-    //   paddingHorizontal: SPACING.xs,  // Horizontal padding
-    //   borderRadius: DIMENSIONS.borderRadius.sm, // Rounded corners
-    //   alignItems: 'center',           // Center text horizontally
-    //   justifyContent: 'center',       // Center text vertically
-    // },
-    
+
     skipText: {
       fontSize: TYPOGRAPHY.body,
       color: COLORS.white,            // Text color
