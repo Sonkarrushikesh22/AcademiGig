@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Button } from 'react-native';
-import ProfileHeader from './components/ProfileHeader';
-import Skills from './components/Skills';
-import Experience from './components/Experience';
+import ProfileHeader from '../../components/Profile/Profileheader';
+import Skills from '../../components/Profile/skills';
+import Experience from '../../components/Profile/experince';
 
 const UserProfileScreen = () => {
   const [userData, setUserData] = useState({
-    name: 'Sergio Aguero',
+    name: 'Manu Yeduu',
     location: 'Jakarta, Indonesian',
     phone: '+62 818-3136-2121',
-    avatarUrl: 'https://example.com/avatar.jpg',
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1587&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     bio: 'hello, I’m a UI/UX Designer with 2 years of experience...',
     skills: ['UI Design', 'UX Design', 'Wireframing', 'Motion Graphic', 'Figma', 'After Effects', 'Adobe XD'],
     experience: [
