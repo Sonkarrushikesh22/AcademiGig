@@ -14,7 +14,7 @@ const JobSchema = new Schema({
     type: String,
     required: true,
   },
-  requirements: [String], // Array of requirements, e.g., ["Bachelor's Degree", "2+ years experience"]
+  requirements: [String], // Array of requirements
   responsibilities: [String], // Array of responsibilities
   salary: {
     min: {
@@ -59,6 +59,11 @@ const JobSchema = new Schema({
   experienceLevel: {
     type: String,
     enum: ['Entry', 'Mid', 'Senior'],
+  },
+  employer: {
+    type: Schema.Types.ObjectId,
+    ref: 'Employer', // Reference to the Employer model
+    required: true,
   },
 });
 
