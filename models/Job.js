@@ -60,7 +60,7 @@ const JobSchema = new Schema({
     type: String,
     enum: ['Entry', 'Mid', 'Senior'],
   },
-  employer: {
+  employers: {
     type: Schema.Types.ObjectId,
     ref: 'Employer', // Reference to the Employer model
     required: true,

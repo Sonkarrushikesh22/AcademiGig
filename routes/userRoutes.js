@@ -1,7 +1,13 @@
-const router = require('express').Router();
+const express = require('express');
+const userController = require('../controllers/userController');
+const fileUploadService = require('../services/fileUploadService');
 
-router.get("/get-users", (req, res) => {
-    res.send("Get Users");
-});
+const router = express.Router();
+
+router.put(
+  '/profile',
+  fileUploadService.uploadSingle('profile-images'), // Upload to 'profile-images' folder
+  userController.updateUserProfile
+);
 
 module.exports = router;

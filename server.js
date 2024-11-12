@@ -5,6 +5,7 @@ const colors = require("colors");
 const morgan = require("morgan");
 const connectDB = require("./config/db");
 const routes = require("./routes/routes.js");
+const { S3Client } = require("@aws-sdk/client-s3");
 
 
 //DOTENV

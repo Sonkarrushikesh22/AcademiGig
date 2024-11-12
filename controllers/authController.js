@@ -1,6 +1,5 @@
 const User = require("../models/User");
 const Employer = require("../models/Employer");
-//const Admin = require("../models/Admin");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -19,35 +18,32 @@ exports.registerUser = async (req, res) => {
     }
 };
 
-// Employer Registration
 exports.registerEmployer = async (req, res) => {
     try {
-        const { email, password, companyName } = req.body;
+        const { email, password, name, companyName, phone, website } = req.body;
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newEmployer = new Employer({ companyName, email, password: hashedPassword });
+        // Create a new Employer document
+        const newEmployer = new Employer({
+            name,
+            email,
+            password: hashedPassword,
+            phone,
+            website,
+        });
+
+        // Save the new employer to the database
         await newEmployer.save();
+
         res.status(201).json({ message: "Employer registered successfully", data: newEmployer });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Employer registration failed", error: error.message });
     }
 };
 
-// Admin Registration
-// exports.registerAdmin = async (req, res) => {
-//     try {
-//         const { email, password, adminName } = req.body;
-//         const salt = await bcrypt.genSalt(10);
-//         const hashedPassword = await bcrypt.hash(password, salt);
 
-//         const newAdmin = new Admin({ adminName, email, password: hashedPassword });
-//         await newAdmin.save();
-//         res.status(201).json({ message: "Admin registered successfully", data: newAdmin });
-//     } catch (error) {
-//         res.status(500).json({ message: "Admin registration failed", error: error.message });
-//     }
-// };
 
 // User Login
 exports.loginUser = async (req, res) => {
@@ -86,22 +82,3 @@ exports.loginEmployer = async (req, res) => {
         res.status(500).json({ message: "Login failed", error: error.message });
     }
 };
-
-// Admin Login
-// exports.loginAdmin = async (req, res) => {
-//     try {
-//         const { email, password } = req.body;
-//         const admin = await Admin.findOne({ email });
-
-//         if (!admin) return res.status(404).json({ message: "Admin not found" });
-
-//         const isPasswordValid = await bcrypt.compare(password, admin.password);
-//         if (!isPasswordValid) return res.status(400).json({ message: "Invalid credentials" });
-
-//         const token = jwt.sign({ userId: admin._id, role: "admin" }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-//         res.status(200).json({ message: "Login successful", token });
-//     } catch (error) {
-//         res.status(500).json({ message: "Login failed", error: error.message });
-//     }
-// };
