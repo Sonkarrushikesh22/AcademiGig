@@ -6,16 +6,8 @@ const Job = require('../models/Job');
 // Controller to save a job
 const saveJob = async (req, res) => {
   try {
-    const userId = req.user.userId; // Extract user ID from the decoded JWT token in req.user
-    const jobId = String(req.body.jobId); // Ensure jobId is a string
-
-    // Debug log
-    console.log('Received jobId:', jobId, 'Type:', typeof jobId);
-
-    // Validate jobId format
-    if (!mongoose.Types.ObjectId.isValid(jobId)) {
-      return res.status(400).json({ message: 'Invalid job ID format' });
-    }
+    const userId = req.user.userId; 
+    const jobId = (req.body.jobId); 
 
     // Check if job exists
     const job = await Job.findById(jobId);

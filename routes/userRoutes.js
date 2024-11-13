@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.put(
   '/updateuserprofile',
-  authMiddleware,
+  authMiddleware('user'),
   fileUploadService.uploadSingle('profile-images'), // Upload to 'profile-images' folder
   userController.updateUserProfile
 );

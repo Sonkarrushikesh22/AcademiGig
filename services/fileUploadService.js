@@ -25,16 +25,19 @@ const uploadSingle = (folder) => {
       //acl: 'public-read',
       key: (req, file, cb) => {
         console.log("Processing file upload:", file);  // Debugging log
-        const fileName = `${folder}/${req.user.id}-${Date.now()}-${file.originalname}`;
+        const fileName = `${folder}/${req.user.userId}-${Date.now()}-${file.originalname}`;
         cb(null, fileName);
       },
     }),
     limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5 MB
     fileFilter: (req, file, cb) => {
-      if (file.mimetype.startsWith('image/')) {
+      // Allow only images, PDFs, and DOC/DOCX files
+      const allowedMimes = ['image/', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      
+      if (allowedMimes.some(mime => file.mimetype.startsWith(mime))) {
         cb(null, true);
       } else {
-        cb(new Error('Invalid file type. Only images are allowed.'));
+        cb(new Error('Invalid file type. Only images, PDFs, DOC, and DOCX files are allowed.'));
       }
     },
   });

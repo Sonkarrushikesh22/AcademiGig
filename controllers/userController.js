@@ -38,7 +38,7 @@ exports.updateUserProfile = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.userId;
   
       // Fetch the user's profile
       const profile = await Profile.findOne({ user: userId });
@@ -59,7 +59,7 @@ exports.getProfile = async (req, res) => {
    */
   exports.deleteProfile = async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.userId;
   
       // Find the profile
       const profile = await Profile.findOne({ user: userId });
@@ -95,5 +95,5 @@ exports.getProfile = async (req, res) => {
   };
 
 exports.applyForJob = (req, res) => {
-    // Logic for users to apply for a job
+    
 };

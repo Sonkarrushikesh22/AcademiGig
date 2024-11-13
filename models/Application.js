@@ -1,3 +1,4 @@
+// models/JobApplication.js
 const mongoose = require('mongoose');
 
 const JobApplicationSchema = new mongoose.Schema({
@@ -13,7 +14,7 @@ const JobApplicationSchema = new mongoose.Schema({
   },
   resumeUrl: {
     type: String,
-    required: true, // URL to the user's resume stored in S3 or another storage
+    required: true, // URL to the uploaded resume file
   },
   coverLetter: {
     type: String, // Optional cover letter text
@@ -22,14 +23,14 @@ const JobApplicationSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['Applied', 'Interviewing', 'Offered', 'Rejected', 'Withdrawn'],
-    default: 'Applied', // Tracks application status
+    default: 'Applied',
   },
   appliedAt: {
     type: Date,
-    default: Date.now, // Timestamp when the application was submitted
+    default: Date.now,
   },
   notes: {
-    type: String, // Optional field for any application notes
+    type: String,
   },
 });
 
