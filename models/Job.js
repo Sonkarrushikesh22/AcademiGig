@@ -65,6 +65,7 @@ const JobSchema = new Schema({
     ref: 'Employer', // Reference to the Employer model
     required: true,
   },
+  companyLogoUrl: String,
 });
 
 module.exports = mongoose.model('Job', JobSchema);

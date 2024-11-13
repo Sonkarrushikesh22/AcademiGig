@@ -5,7 +5,7 @@ exports.createJob = async (req, res) => {
   try {
     
     const employerId = req.user.userId;
-    console.log('Attempting to use employerId:', employerId);
+    //console.log('Attempting to use employerId:', employerId);
 
     if (!employerId) {
       return res.status(404).json({ 
@@ -13,8 +13,7 @@ exports.createJob = async (req, res) => {
         message: 'Employer not found. Please make sure you are registered as an employer' 
       });
     }
-    //const employerId = "6733129e1ba13327e949b06c";
-
+  
     let companyLogoUrl;
     if (req.file) {
       companyLogoUrl = req.file.location;

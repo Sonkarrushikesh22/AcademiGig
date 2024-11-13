@@ -1,11 +1,11 @@
 const User = require('../models/User');
 const  Employer = require('../models/Employer');
 const Profile = require('../models/Profile');
-const fileUploadService = require('../services/fileUploadService');
+
 
 exports.updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { name, location, phone, about, skills, experience } = req.body;
     let avatarUrl;
 
