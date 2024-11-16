@@ -26,13 +26,13 @@ const WelcomePage = () => {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.button}
-              onPress={() => router.push("/sign-in")}
+              onPress={() => router.replace("/sign-in")}
             >
               <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.button}
-              onPress={() => router.push("/sign-up")}
+              onPress={() => router.replace("/sign-up")}
             >
               <Text style={styles.buttonText}>Signup</Text>
             </TouchableOpacity>
@@ -40,12 +40,6 @@ const WelcomePage = () => {
         </View>
         <View style={styles.imageContainer}>
           <Image style={styles.image} source={Img} resizeMode="contain" />
-          <TouchableOpacity
-            style={styles.exploreButton}
-            onPress={() => router.push("/home")}
-          >
-            <Text style={styles.buttonText}>Explore Jobs</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -101,16 +95,6 @@ const styles = StyleSheet.create({
     position: "relative",
     width: width * 1.1,
     height: height * 0.55,
-  },
-  exploreButton: {
-    position: "absolute",
-    top: height * 0.2,
-    right: 0,
-    backgroundColor: "#6A5ACD",
-    paddingVertical: height * 0.015,
-    paddingHorizontal: width * 0.08,
-    borderRadius: 25,
-    zIndex: 1,
   },
 });
 

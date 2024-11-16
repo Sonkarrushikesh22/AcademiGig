@@ -4,7 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import React from 'react'
 
-SplashScreen.preventAutoHideAsync();
+//SplashScreen.preventAutoHideAsync(false);
 
 const RootLayout = () => {
   return (

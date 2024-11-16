@@ -1,46 +1,102 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Button } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
 import ProfileHeader from '../../components/Profile/Profileheader';
-import Skills from '../../components/Profile/skills';
-import Experience from '../../components/Profile/experince';
+import {CompletionBanner,  ProfileSection} from '../../components/Profile/profileSection';
+import { BasicInfoForm, AboutForm, SkillsForm, ExperienceForm } from '../../components/Profile/profileForm';
 
 const UserProfileScreen = () => {
-  const [userData, setUserData] = useState({
-    name: 'Manu Yeduu',
-    location: 'Jakarta, Indonesian',
-    phone: '+62 818-3136-2121',
-    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1587&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    bio: 'hello, I’m a UI/UX Designer with 2 years of experience...',
-    skills: ['UI Design', 'UX Design', 'Wireframing', 'Motion Graphic', 'Figma', 'After Effects', 'Adobe XD'],
-    experience: [
-      { title: 'Telkom High Junior School', company: 'School', startYear: '2017', endYear: '2021' },
-      { title: 'Freelancer', company: 'work', startYear: '2021', endYear: 'present' },
-    ],
+  const [profile, setProfile] = useState({
+    name: '',
+    location: '',
+    phone: '',
+    about: '',
+    skills: [],
+    experience: [],
+    avatarUrl: null,
   });
 
-  const handleEditProfile = () => {
-    // Open profile edit modal or navigate to edit screen
+  const [editingSections, setEditingSections] = useState({
+    basic: false,
+    about: false,
+    skills: false,
+    experience: false,
+  });
+
+  const handleUpdateProfile = (section, data) => {
+    setProfile(prev => ({ ...prev, ...data }));
+    setEditingSections(prev => ({ ...prev, [section]: false }));
   };
 
-  const handleEditSkills = () => {
-    // Open skills edit modal or navigate to edit screen
-  };
-
-  const handleEditExperience = () => {
-    // Open experience edit modal or navigate to edit screen
+  const calculateProfileCompletion = () => {
+    const fields = ['name', 'location', 'phone', 'about', 'avatarUrl'];
+    const completed = fields.filter(field => profile[field] && profile[field].length > 0).length;
+    return Math.round((completed / fields.length) * 100);
   };
 
   return (
     <ScrollView style={styles.container}>
-      <ProfileHeader
-        name={userData.name}
-        location={userData.location}
-        phone={userData.phone}
-        avatarUrl={userData.avatarUrl}
-        onEdit={handleEditProfile}
+      <CompletionBanner percentage={calculateProfileCompletion()} />
+      
+      <ProfileHeader 
+        avatarUrl={profile.avatarUrl}
+        onImageUpdate={url => setProfile(prev => ({ ...prev, avatarUrl: url }))}
       />
-      <Skills skills={userData.skills} onEdit={handleEditSkills} />
-      <Experience experience={userData.experience} onEdit={handleEditExperience} />
+
+      <ProfileSection
+        title="Basic Information"
+        editing={editingSections.basic}
+        onEdit={() => setEditingSections(prev => ({ ...prev, basic: true }))}
+        onSave={() => handleUpdateProfile('basic', {
+          name: profile.name,
+          location: profile.location,
+          phone: profile.phone,
+        })}
+      >
+        <BasicInfoForm
+          data={profile}
+          editing={editingSections.basic}
+          onChange={data => setProfile(prev => ({ ...prev, ...data }))}
+        />
+      </ProfileSection>
+
+      <ProfileSection
+        title="About"
+        editing={editingSections.about}
+        onEdit={() => setEditingSections(prev => ({ ...prev, about: true }))}
+        onSave={() => handleUpdateProfile('about', { about: profile.about })}
+      >
+        <AboutForm
+          data={profile}
+          editing={editingSections.about}
+          onChange={data => setProfile(prev => ({ ...prev, ...data }))}
+        />
+      </ProfileSection>
+
+      <ProfileSection
+        title="Skills"
+        editing={editingSections.skills}
+        onEdit={() => setEditingSections(prev => ({ ...prev, skills: true }))}
+        onSave={() => handleUpdateProfile('skills', { skills: profile.skills })}
+      >
+        <SkillsForm
+          data={profile}
+          editing={editingSections.skills}
+          onChange={data => setProfile(prev => ({ ...prev, ...data }))}
+        />
+      </ProfileSection>
+
+      <ProfileSection
+        title="Experience"
+        editing={editingSections.experience}
+        onEdit={() => setEditingSections(prev => ({ ...prev, experience: true }))}
+        onSave={() => handleUpdateProfile('experience', { experience: profile.experience })}
+      >
+        <ExperienceForm
+          data={profile}
+          editing={editingSections.experience}
+          onChange={data => setProfile(prev => ({ ...prev, ...data }))}
+        />
+      </ProfileSection>
     </ScrollView>
   );
 };
@@ -48,7 +104,7 @@ const UserProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
   },
 });
 
