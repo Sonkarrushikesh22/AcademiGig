@@ -9,7 +9,7 @@ const SavedJobSchema = new Schema({
   },
   job: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job', // Reference to the Job schema
+    ref: 'Job', // Reference to the Job schema 
     required: true,
   },
   savedAt: {

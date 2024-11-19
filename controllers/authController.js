@@ -12,19 +12,23 @@ exports.registerUser = async (req, res) => {
 
         const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
-        res.status(201).json({ message: "User registered successfully", data: newUser });
+
+        // Generate token for the new user
+        const token = jwt.sign({ userId: newUser._id, role: "user" }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+        res.status(201).json({ message: "User registered successfully", token, data: newUser });
     } catch (error) {
         res.status(500).json({ message: "User registration failed", error: error.message });
     }
 };
 
+// Employer Registration
 exports.registerEmployer = async (req, res) => {
     try {
         const { email, password, name, companyName, phone, website } = req.body;
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create a new Employer document
         const newEmployer = new Employer({
             name,
             email,
@@ -32,18 +36,17 @@ exports.registerEmployer = async (req, res) => {
             phone,
             website,
         });
-
-        // Save the new employer to the database
         await newEmployer.save();
 
-        res.status(201).json({ message: "Employer registered successfully", data: newEmployer });
+        // Generate token for the new employer
+        const token = jwt.sign({ userId: newEmployer._id, role: "employer" }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+        res.status(201).json({ message: "Employer registered successfully", token, data: newEmployer });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Employer registration failed", error: error.message });
     }
 };
-
-
 
 // User Login
 exports.loginUser = async (req, res) => {
@@ -55,7 +58,7 @@ exports.loginUser = async (req, res) => {
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) return res.status(400).json({ message: "Invalid credentials" });
-
+        
         const token = jwt.sign({ userId: user._id, role: "user" }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
         res.status(200).json({ message: "Login successful", token });

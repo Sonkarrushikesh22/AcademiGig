@@ -1,4 +1,3 @@
-// models/JobApplication.js
 const mongoose = require('mongoose');
 
 const JobApplicationSchema = new mongoose.Schema({
@@ -12,13 +11,10 @@ const JobApplicationSchema = new mongoose.Schema({
     ref: 'Job', // Reference to the Job schema
     required: true,
   },
-  resumeUrl: {
-    type: String,
-    required: true, // URL to the uploaded resume file
-  },
-  coverLetter: {
-    type: String, // Optional cover letter text
-    required: false,
+  profile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Profile', // Reference to the Profile schema
+    required: true,
   },
   status: {
     type: String,

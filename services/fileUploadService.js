@@ -1,10 +1,10 @@
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
-const multer = require('multer');
-const multerS3 = require('multer-s3');
-require('dotenv').config();
+const { S3Client, GetObjectCommand, PutObjectCommand,DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const dotenv = require("dotenv");
+dotenv.config();
 
-// Initialize S3 Client (v3)
-const s3 = new S3Client({
+// Initialize S3 client
+const s3Client = new S3Client({
   region: process.env.BUCKET_REGION,
   credentials: {
     accessKeyId: process.env.ACCESS_KEY,
@@ -13,65 +13,71 @@ const s3 = new S3Client({
 });
 
 /**
- * Creates a dynamic multer upload middleware for S3.
- * @param {string} folder - The folder name in the S3 bucket (e.g., 'profile-images', 'company-logos').
- * @returns {Function} - A middleware function for uploading a single file.
+ * Generate a presigned URL for retrieving an object (e.g., profile, logo, resume).
+ * @param {string} key - The key (path) of the object in the S3 bucket.
+ * @param {number} expiresIn - The expiration time for the URL in seconds (default: 3600s = 1 hour).
+ * @returns {Promise<string>} - A presigned URL for accessing the object.
  */
-const uploadSingle = (folder) => {
-  const upload = multer({
-    storage: multerS3({
-      s3,
-      bucket: process.env.BUCKET_NAME,
-      //acl: 'public-read',
-      key: (req, file, cb) => {
-        console.log("Processing file upload:", file);  // Debugging log
-        const fileName = `${folder}/${req.user.userId}-${Date.now()}-${file.originalname}`;
-        cb(null, fileName);
-      },
-    }),
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5 MB
-    fileFilter: (req, file, cb) => {
-      // Allow only images, PDFs, and DOC/DOCX files
-      const allowedMimes = ['image/', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+async function getObjectURL(key, expiresIn = 3600) {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: process.env.BUCKET_NAME,
+      Key: key,
       
-      if (allowedMimes.some(mime => file.mimetype.startsWith(mime))) {
-        cb(null, true);
-      } else {
-        cb(new Error('Invalid file type. Only images, PDFs, DOC, and DOCX files are allowed.'));
-      }
-    },
-  });
-
-  return (req, res, next) => {
-    upload.single('file')(req, res, (err) => {
-      if (err) {
-        return res.status(400).json({ message: err.message });
-      }
-      next();
     });
-  };
-};
+    return await getSignedUrl(s3Client, command, { expiresIn });
+  } catch (error) {
+    console.error("Error generating presigned URL for GET:", error);
+    throw error;
+  }
+}
 
 /**
- * Function to delete a file from S3.
- * @param {string} key - The key (file path) of the file to delete.
- * @returns {Promise<void>}
+ * Generate a presigned URL for uploading an object.
+ * @param {string} filename - The desired filename for the object in the S3 bucket.
+ * @param {string} contentType - The MIME type of the file (e.g., 'image/jpeg', 'application/pdf').
+ * @param {string} folder - The folder where the file will be stored (e.g., 'user-profiles', 'job-assets', 'company-logos').
+ * @param {number} expiresIn - The expiration time for the URL in seconds (default: 3600s = 1 hour).
+ * @returns {Promise<string>} - A presigned URL for uploading the object.
  */
-const deleteFileFromS3 = async (key) => {
+async function putObjectURL(filename, contentType, folder, expiresIn = 3600) {
+  try {
+    // Ensure folder is provided and is not empty
+    if (!folder) {
+      throw new Error("Folder name is required.");
+    }
+
+    const key = `${folder}/${filename}`; // Organize files by folder
+    const command = new PutObjectCommand({
+      Bucket: process.env.BUCKET_NAME,
+      Key: key,
+      ContentType: contentType,
+      
+    });
+    return await getSignedUrl(s3Client, command, { expiresIn });
+  } catch (error) {
+    console.error("Error generating presigned URL for PUT:", error);
+    throw error;
+  }
+}
+
+async function deleteFileFromS3(key) {
   try {
     const command = new DeleteObjectCommand({
       Bucket: process.env.BUCKET_NAME,
-      Key: key,
+      Key: key
     });
-    await s3.send(command);
-    console.log(`File deleted successfully: ${key}`);
+
+    await s3Client.send(command);
+    return true;
   } catch (error) {
-    console.error(`Error deleting file from S3: ${error.message}`);
-    throw new Error('Failed to delete file from S3');
+    console.error("Error deleting file from S3:", error);
+    throw error;
   }
-};
+}
 
 module.exports = {
-  uploadSingle,
-  deleteFileFromS3,
+  getObjectURL,
+  putObjectURL,
+  deleteFileFromS3
 };

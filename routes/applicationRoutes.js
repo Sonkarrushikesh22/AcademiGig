@@ -1,12 +1,10 @@
 const router = require('express').Router();
 const applicationController = require('../controllers/applicationController');
 const authMiddleware = require('../middlewares/authMiddleware');
-const fileUploadService = require('../services/fileUploadService');
 
 // Corrected route definition
 router.post('/apply',
   authMiddleware('user'), 
-  fileUploadService.uploadSingle('resume'), 
   applicationController.applyToJob
 );
 
