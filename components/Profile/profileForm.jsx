@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 
 export const BasicInfoForm = ({ data, editing, onChange }) => {
   if (!editing) {
@@ -233,6 +235,98 @@ export const ExperienceForm = ({ data, editing, onChange }) => {
   );
 };
 
+export const ResumeUploadForm = ({ data, editing, onChange }) => {
+  const [uploadError, setUploadError] = useState(null);
+
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'application/msword', 
+               'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        copyToCacheDirectory: true
+      });
+
+      if (result.type === 'success') {
+        // Check file size (limit to 5MB)
+        const fileInfo = await FileSystem.getInfoAsync(result.uri);
+        if (fileInfo.size > 5 * 1024 * 1024) {
+          setUploadError('File size must be less than 5MB');
+          return;
+        }
+
+        // Update the data with new resume info
+        onChange({
+          resume: {
+            name: result.name,
+            uri: result.uri,
+            type: result.mimeType,
+            size: fileInfo.size
+          }
+        });
+        setUploadError(null);
+      }
+    } catch (error) {
+      setUploadError('Error uploading file. Please try again.');
+      console.error('Document picking error:', error);
+    }
+  };
+
+  const removeResume = () => {
+    onChange({ resume: null });
+    setUploadError(null);
+  };
+
+  if (!editing) {
+    return (
+      <View style={styles.resumeContainer}>
+        {data.resume ? (
+          <View style={styles.resumeInfo}>
+            <Feather name="file-text" size={20} color="#666" />
+            <Text style={styles.resumeText}>{data.resume.name}</Text>
+          </View>
+        ) : (
+          <Text style={styles.emptyText}>Upload your resume</Text>
+        )}
+      </View>
+    );
+  }
+
+  return (
+    <View>
+      {data.resume ? (
+        <View style={styles.uploadedFile}>
+          <View style={styles.fileInfo}>
+            <Feather name="file-text" size={20} color="#666" />
+            <Text style={styles.fileName}>{data.resume.name}</Text>
+          </View>
+          <TouchableOpacity 
+            onPress={removeResume}
+            style={styles.removeButton}
+          >
+            <Feather name="trash-2" size={20} color="#FF3B30" />
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity 
+          onPress={pickDocument}
+          style={styles.uploadButton}
+        >
+          <Feather name="upload" size={20} color="#007AFF" />
+          <Text style={styles.uploadButtonText}>Upload Resume</Text>
+        </TouchableOpacity>
+      )}
+      
+      {uploadError && (
+        <Text style={styles.errorText}>{uploadError}</Text>
+      )}
+      
+      <Text style={styles.helpText}>
+        Accepted formats: PDF, DOC, DOCX (max 5MB)
+      </Text>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   input: {
     backgroundColor: '#f8f8f8',
@@ -354,6 +448,73 @@ const styles = StyleSheet.create({
   },
   removeExperienceButton: {
     padding: 8,
+  },
+  emptyText: {
+    color: '#999',
+    fontSize: 16,
+    fontStyle: 'italic',
+  },
+  resumeContainer: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    padding: 12,
+  },
+  resumeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  resumeText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 12,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  uploadButtonText: {
+    color: '#007AFF',
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  uploadedFile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  fileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  fileName: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 12,
+    flex: 1,
+  },
+  removeButton: {
+    padding: 8,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  helpText: {
+    color: '#666',
+    fontSize: 14,
+    fontStyle: 'italic',
   },
   emptyText: {
     color: '#999',

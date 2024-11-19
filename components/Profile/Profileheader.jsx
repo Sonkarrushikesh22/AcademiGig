@@ -1,26 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState,  useEffect } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { Feather } from '@expo/vector-icons';
+import { getDownloadPresignedUrl } from '../../api/userapi';
 
 const ProfilePlaceholder = () => (
   <View style={styles.placeholderContainer}>
     <View style={styles.placeholderHead} />
     <View style={styles.placeholderBody} />
-    <View style={styles.placeholderInitials}>
-      <Text style={styles.initialsText}>Profile</Text>
-    </View>
   </View>
 );
 
-const ProfileHeader = ({ avatarUrl, onImageUpdate }) => {
+const ProfileHeader = ({ avatarUrl, avatarKey, onImageUpdate }) => {
   const [uploading, setUploading] = useState(false);
+  const [displayUrl, setDisplayUrl] = useState(null);
+  // Function to get the display URL
+  const getDisplayUrl = async () => {
+    // If avatarKey exists, generate a new presigned download URL
+    if (avatarKey) {
+      try {
+        const presignedUrl = await getDownloadPresignedUrl(avatarKey, 'avatar');
+        return presignedUrl;
+      } catch (error) {
+        console.error('Failed to get download URL:', error);
+        return null;
+      }
+    }
+    
+    // Fallback to existing avatarUrl if available
+    return avatarUrl || null;
+  };
+
+  useEffect(() => {
+    const loadDisplayUrl = async () => {
+      const url = await getDisplayUrl();
+      setDisplayUrl(url);
+    };
+
+    loadDisplayUrl();
+  }, [avatarUrl, avatarKey]);
 
   const handleImagePick = async () => {
     if (uploading) return;
 
     try {
+      // Request permissions first
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        alert('Permission to access camera roll is required!');
+        return;
+      }
+
       setUploading(true);
+      
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -29,10 +63,20 @@ const ProfileHeader = ({ avatarUrl, onImageUpdate }) => {
       });
 
       if (!result.canceled && result.assets[0].uri) {
-        onImageUpdate(result.assets[0].uri);
+        // Check file size
+        const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
+        const fileSize = fileInfo.size / (1024 * 1024); // Convert to MB
+
+        if (fileSize > 5) {
+          alert('Please select an image under 5MB');
+          return;
+        }
+
+        await onImageUpdate(result.assets[0].uri);
       }
     } catch (error) {
       console.error('Image pick error:', error);
+      alert('Failed to select image. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -45,17 +89,20 @@ const ProfileHeader = ({ avatarUrl, onImageUpdate }) => {
         disabled={uploading}
         style={styles.avatarButton}
       >
-        {avatarUrl ? (
+        {displayUrl ? (
           <Image 
-            source={{ uri: avatarUrl }} 
+            source={{ uri: displayUrl }} 
             style={styles.avatar}
+            // Add cache control
+            loadingIndicatorSource={require('../../assets/profilePlaceHolder.png')} // Add a placeholder image
+            onError={(e) => console.log('Image loading error:', e.nativeEvent.error)}
           />
         ) : (
           <View style={styles.avatarPlaceholder}>
             <ProfilePlaceholder />
           </View>
         )}
-        <View style={styles.editIconContainer}>
+        <View style={[styles.editIconContainer, uploading && styles.uploadingContainer]}>
           <Feather 
             name={uploading ? "loader" : "camera"} 
             size={16} 
@@ -64,7 +111,9 @@ const ProfileHeader = ({ avatarUrl, onImageUpdate }) => {
           />
         </View>
       </TouchableOpacity>
-      <Text style={styles.tapToChangeText}>Tap to change profile photo</Text>
+      <Text style={styles.tapToChangeText}>
+        {uploading ? 'Uploading...' : 'Tap to change profile photo'}
+      </Text>
     </View>
   );
 };
@@ -76,6 +125,7 @@ const styles = StyleSheet.create({
   },
   avatarButton: {
     marginBottom: 8,
+    position: 'relative',
   },
   avatar: {
     width: 120,
@@ -88,6 +138,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 4,
+    backgroundColor: '#E1E9F5', // Add placeholder background color
   },
   avatarPlaceholder: {
     width: 120,
@@ -125,16 +176,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     backgroundColor: '#B0C4DE',
   },
-  placeholderInitials: {
-    position: 'absolute',
-    top: '60%',
-    alignItems: 'center',
-  },
-  initialsText: {
-    fontSize: 14,
-    color: '#6B8CC7',
-    fontWeight: '600',
-  },
   editIconContainer: {
     position: 'absolute',
     bottom: 0,
@@ -148,6 +189,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
+  uploadingContainer: {
+    backgroundColor: '#666',
+  },
   spinningIcon: {
     transform: [{ rotate: '45deg' }],
   },
@@ -155,6 +199,11 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 12,
     marginTop: 4,
+  },
+  // Add animation styles for the loading state
+  '@keyframes spin': {
+    from: { transform: [{ rotate: '0deg' }] },
+    to: { transform: [{ rotate: '360deg' }] },
   },
 });
 
