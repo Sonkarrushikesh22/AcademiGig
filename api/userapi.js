@@ -1,21 +1,23 @@
 
 import axios from 'axios';
 import API from './api';
-import * as FileSystem from 'expo-file-system';// Fetch user profile
+import * as FileSystem from 'expo-file-system';
+
+// Fetch user profile
 export const getUserProfile = async () => {
   try {
     const response = await API.get('/user/getprofile');
-    const { name, location, phone, about, skills, experience, avatarUrl, resumeUrl } = response.data || {};
+    const profileData = response.data.profile || {};
     
     return {
-      name: name || '',
-      location: location || '',
-      phone: phone || '',
-      about: about || '',
-      skills: skills || [],
-      experience: experience || [],
-      avatarUrl: avatarUrl || null,
-      resumeUrl: resumeUrl || null,
+      name: profileData.name || '',
+      location: profileData.location || '',
+      phone: profileData.phone || '',
+      about: profileData.about || '',
+      skills: profileData.skills || [],
+      experience: profileData.experience || [],
+      avatarUrl: response.data.avatarUrl || null,
+      resumeUrl: response.data.resumeUrl || null,
     };
   } catch (error) {
     console.error('Error fetching user profile:', error.response?.data || error.message);

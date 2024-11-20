@@ -14,10 +14,10 @@ const UserProfileScreen = () => {
     skills: [],
     experience: [],
     avatarUrl: null,
-    avatarKey: null, 
     resumeUrl: null,
-    resumeKey: null,  
+    resumeTemp: null
   });
+
 
   const [editingSections, setEditingSections] = useState({
     basic: false,
@@ -32,23 +32,23 @@ const UserProfileScreen = () => {
     const fetchProfile = async () => {
       try {
         const profileData = await getUserProfile();
-        if (profileData) {
-          setProfile({
-            name: profileData.name || '',
-            location: profileData.location || '',
-            phone: profileData.phone || '',
-            about: profileData.about || '',
-            skills: profileData.skills || [],
-            experience: profileData.experience || [],
-            avatarUrl: profileData.avatarUrl || null,
-            avatarKey: profileData.avatarKey || null,  
-            resumeUrl: profileData.resumeUrl || null,
-            resumeKey: profileData.resumeKey || null, 
-          });
-        }
+        console.log('Raw Profile Data:', profileData);
+        
+        // Ensure all fields are set
+        setProfile({
+          name: profileData.name || '',
+          location: profileData.location || '',
+          phone: profileData.phone || '',
+          about: profileData.about || '',
+          skills: profileData.skills || [],
+          experience: profileData.experience || [],
+          avatarUrl: profileData.avatarUrl || null,
+          resumeUrl: profileData.resumeUrl || null, // Access from profileData instead of response.data
+          resumeKey: profileData.resumeKey || null ,
+          resumeTemp: null
+        });
       } catch (error) {
-        console.error('Error fetching profile:', error);
-        Alert.alert('Error', 'Failed to load profile data');
+        console.error('Profile Fetch Error:', error);
       }
     };
 
@@ -135,7 +135,15 @@ const handleAvatarUpload = async (imageUri) => {
 
 // Handle resume upload
 const handleResumeUpload = async (resumeUri) => {
+  if (!resumeUri) {
+    console.error('No resume URI provided');
+    Alert.alert('Error', 'No resume file selected');
+    return;
+  }
+
   try {
+    console.log('Starting resume upload with URI:', resumeUri);
+    
     // Validate file size (10MB limit for PDFs)
     const isValidSize = await validateFileSize(resumeUri, 10);
     if (!isValidSize) {
@@ -157,11 +165,17 @@ const handleResumeUpload = async (resumeUri) => {
     }
 
     // Upload to S3
-    const publicUrl = await uploadFileToS3(presignedUrl, file, file.type);
+    const uploadResult = await uploadFileToS3(presignedUrl, file, file.type);
     
     // Update profile with new resume URL
-    await updateProfile({ ...profile, resumeUrl: publicUrl });
-    setProfile(prev => ({ ...prev, resumeUrl: publicUrl }));
+    const updatedProfile = {
+      ...profile,
+      resumeUrl: uploadResult.url,  // Ensure this is the permanent URL
+      resumeTemp: null // Clear temporary data after successful upload
+    };
+    
+    await updateProfile(updatedProfile);
+    setProfile(updatedProfile);
     
     Alert.alert('Success', 'Resume uploaded successfully');
   } catch (error) {
@@ -236,17 +250,33 @@ const handleResumeUpload = async (resumeUri) => {
       </ProfileSection>
 
       <ProfileSection
-        title="Resume"
-        editing={editingSections.resume}
-        onEdit={() => setEditingSections(prev => ({ ...prev, resume: true }))}
-        onSave={() => handleResumeUpload(profile.resumeUrl)}
-      >
-        <ResumeUploadForm
-          data={profile}
-          editing={editingSections.resume}
-          onChange={resumeUri => setProfile(prev => ({ ...prev, resumeUrl: resumeUri }))}
-        />
-      </ProfileSection>
+  title="Resume"
+  editing={editingSections.resume}
+  onEdit={() => setEditingSections((prev) => ({ ...prev, resume: true }))}
+  onSave={() => {
+    if (profile.resumeTemp && profile.resumeTemp.uri) {
+      handleResumeUpload(profile.resumeTemp.uri);
+    }
+    setEditingSections((prev) => ({ ...prev, resume: false }));
+  }}
+>
+  <ResumeUploadForm
+    data={{
+      resumeUrl: profile.resumeUrl,
+      resumeTemp: profile.resumeTemp
+    }}
+    editing={editingSections.resume}
+    onChange={(fileData) => {
+      console.log('Resume file data:', fileData);
+      setProfile((prev) => ({
+        ...prev,
+        resumeTemp: fileData,
+        resumeUrl: fileData ? fileData.uri : null
+      }));
+    }}
+  />
+</ProfileSection>
+
     </ScrollView>
   );
 };

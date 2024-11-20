@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 
-export const BasicInfoForm = ({ data, editing, onChange }) => {
+export const BasicInfoForm = ({data = {}, editing, onChange }) => {
   if (!editing) {
     return (
       <View>
@@ -238,6 +238,7 @@ export const ExperienceForm = ({ data, editing, onChange }) => {
 export const ResumeUploadForm = ({ data, editing, onChange }) => {
   const [uploadError, setUploadError] = useState(null);
 
+  // Function to handle document selection
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -245,23 +246,25 @@ export const ResumeUploadForm = ({ data, editing, onChange }) => {
                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
         copyToCacheDirectory: true
       });
-
-      if (result.type === 'success') {
-        // Check file size (limit to 5MB)
-        const fileInfo = await FileSystem.getInfoAsync(result.uri);
-        if (fileInfo.size > 5 * 1024 * 1024) {
-          setUploadError('File size must be less than 5MB');
+      
+      console.log('Document Picker Result:', result);
+  
+      if (result.canceled === false && result.assets && result.assets[0]) {
+        // Get the first selected asset
+        const file = result.assets[0];
+        
+        // Validate file size (10MB limit)
+        const fileInfo = await FileSystem.getInfoAsync(file.uri);
+        if (fileInfo.size > 10 * 1024 * 1024) {
+          setUploadError('File size must be less than 10 MB');
           return;
         }
-
-        // Update the data with new resume info
+  
+        // Pass the complete file object to the parent component
         onChange({
-          resume: {
-            name: result.name,
-            uri: result.uri,
-            type: result.mimeType,
-            size: fileInfo.size
-          }
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType
         });
         setUploadError(null);
       }
@@ -271,18 +274,19 @@ export const ResumeUploadForm = ({ data, editing, onChange }) => {
     }
   };
 
+  // Function to remove the resume
   const removeResume = () => {
-    onChange({ resume: null });
+    onChange(null);
     setUploadError(null);
   };
 
   if (!editing) {
     return (
       <View style={styles.resumeContainer}>
-        {data.resume ? (
+        {data && data.resumeUrl ? (
           <View style={styles.resumeInfo}>
             <Feather name="file-text" size={20} color="#666" />
-            <Text style={styles.resumeText}>{data.resume.name}</Text>
+            <Text style={styles.resumeText}>Resume uploaded</Text>
           </View>
         ) : (
           <Text style={styles.emptyText}>Upload your resume</Text>
@@ -293,35 +297,27 @@ export const ResumeUploadForm = ({ data, editing, onChange }) => {
 
   return (
     <View>
-      {data.resume ? (
+      {data && data.resumeUrl ? (
         <View style={styles.uploadedFile}>
           <View style={styles.fileInfo}>
             <Feather name="file-text" size={20} color="#666" />
-            <Text style={styles.fileName}>{data.resume.name}</Text>
+            <Text style={styles.fileName}>Resume uploaded</Text>
           </View>
-          <TouchableOpacity 
-            onPress={removeResume}
-            style={styles.removeButton}
-          >
+          <TouchableOpacity onPress={removeResume} style={styles.removeButton}>
             <Feather name="trash-2" size={20} color="#FF3B30" />
           </TouchableOpacity>
         </View>
       ) : (
-        <TouchableOpacity 
-          onPress={pickDocument}
-          style={styles.uploadButton}
-        >
+        <TouchableOpacity onPress={pickDocument} style={styles.uploadButton}>
           <Feather name="upload" size={20} color="#007AFF" />
           <Text style={styles.uploadButtonText}>Upload Resume</Text>
         </TouchableOpacity>
       )}
-      
-      {uploadError && (
-        <Text style={styles.errorText}>{uploadError}</Text>
-      )}
-      
+
+      {uploadError && <Text style={styles.errorText}>{uploadError}</Text>}
+
       <Text style={styles.helpText}>
-        Accepted formats: PDF, DOC, DOCX (max 5MB)
+        Accepted formats: PDF, DOC, DOCX (max 10MB)
       </Text>
     </View>
   );
