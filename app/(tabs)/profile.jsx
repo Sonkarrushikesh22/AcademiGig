@@ -24,7 +24,7 @@ const UserProfileScreen = () => {
     about: false,
     skills: false,
     experience: false,
-    resume: false,
+   // resume: false,
   });
 
   // Fetch user profile on mount
@@ -44,7 +44,6 @@ const UserProfileScreen = () => {
           experience: profileData.experience || [],
           avatarUrl: profileData.avatarUrl || null,
           resumeUrl: profileData.resumeUrl || null, // Access from profileData instead of response.data
-          resumeKey: profileData.resumeKey || null ,
           resumeTemp: null
         });
       } catch (error) {
@@ -57,7 +56,7 @@ const UserProfileScreen = () => {
 
   // Calculate profile completion percentage
   const calculateProfileCompletion = () => {
-    const fields = ['name', 'location', 'phone', 'about', 'avatarUrl'];
+    const fields = ['name', 'location', 'phone', 'about', 'avatarUrl','resumeUrl'];
     const completed = fields.filter(field => profile[field] && profile[field].length > 0).length;
     return Math.round((completed / fields.length) * 100);
   };
@@ -170,6 +169,7 @@ const handleResumeUpload = async (resumeUri) => {
     // Update profile with new resume URL
     const updatedProfile = {
       ...profile,
+      resumeKey: uploadResult.key,
       resumeUrl: uploadResult.url,  // Ensure this is the permanent URL
       resumeTemp: null // Clear temporary data after successful upload
     };

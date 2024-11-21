@@ -123,12 +123,21 @@ export const uploadFileToS3 = async (presignedUrl, file, contentType) => {
       throw new Error(`Upload failed with status ${uploadResult.status}`);
     }
 
-   const urlParts = presignedUrl.split('?')[0];
-    const key = urlParts.split('user-profiles/')[1];
+    const urlParts = presignedUrl.split('?')[0];
 
+    // Use a regular expression to dynamically extract the folder and key
+    const match = urlParts.match(/\/(user-profiles|user-resumes)\/(.+)/);
+    if (!match) {
+      throw new Error('Unable to extract the key from the presigned URL');
+    }
+    
+    const folder = match[1]; // This will be either 'user-profiles' or 'user-resumes'
+    const key = match[2];    // This is the actual key after the folder
+    
     return {
       url: presignedUrl.split('?')[0],
-      key: key
+      folder: folder, // Include the folder for clarity if needed
+      key: key,       // Return the extracted key
     };
   } catch (error) {
     console.error('Error in uploadFileToS3:', error);
