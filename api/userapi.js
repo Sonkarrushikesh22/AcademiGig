@@ -9,6 +9,19 @@ export const getUserProfile = async () => {
     const response = await API.get('/user/getprofile');
     const profileData = response.data.profile || {};
     
+    if (response.status === 404) {
+      return {
+        name: '',
+        location: '',
+        phone: '',
+        about: '',
+        skills: [],
+        experience: [],
+        avatarUrl: null,
+        resumeUrl: null,
+      };
+    }
+
     return {
       name: profileData.name || '',
       location: profileData.location || '',
@@ -20,6 +33,19 @@ export const getUserProfile = async () => {
       resumeUrl: response.data.resumeUrl || null,
     };
   } catch (error) {
+    if (error.response?.status === 404) {
+      // Return default empty profile instead of throwing error
+      return {
+        name: '',
+        location: '',
+        phone: '',
+        about: '',
+        skills: [],
+        experience: [],
+        avatarUrl: null,
+        resumeUrl: null,
+      };
+    }
     console.error('Error fetching user profile:', error.response?.data || error.message);
     throw new Error('Failed to fetch profile data');
   }

@@ -1,8 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native'
 import { Slot, Stack , useRouter, useSegments} from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen';
-//import "../global.css";
-import React from 'react'
+import React from 'react';
 
 //SplashScreen.preventAutoHideAsync(false);
 

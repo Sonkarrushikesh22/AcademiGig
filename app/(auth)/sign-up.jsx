@@ -73,6 +73,7 @@ const SignUp = () => {
 
       Alert.alert(
         'Success',
+        'Account created successfully!',
         [
           {
             text: 'OK',

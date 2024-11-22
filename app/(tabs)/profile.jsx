@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert,Text,TouchableOpacity } from 'react-native';
 import ProfileHeader from '../../components/Profile/Profileheader';
 import { CompletionBanner, ProfileSection } from '../../components/Profile/profileSection';
 import { BasicInfoForm, AboutForm, SkillsForm, ExperienceForm, ResumeUploadForm } from '../../components/Profile/profileForm';
 import { updateProfile, getUserProfile, getPresignedUrl, uploadFileToS3,validateFileSize } from '../../api/userapi';
+import CustomDrawer from '../../components/Profile/drawer';
+import { Ionicons } from '@expo/vector-icons';
 
 const UserProfileScreen = () => {
+  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+
   const [profile, setProfile] = useState({
     name: '',
     location: '',
@@ -183,15 +187,32 @@ const handleResumeUpload = async (resumeUri) => {
     Alert.alert('Error', 'Failed to upload resume');
   }
 };
-  return (
-    <ScrollView style={styles.container}>
-      <CompletionBanner percentage={calculateProfileCompletion()} />
+return (
+  <View style={styles.mainContainer}>
+    {/* Sticky Header */}
+    <View style={styles.headerContainer}>
+      <View style={styles.headerContent}>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.headerText}>Profile</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => setIsDrawerOpen(true)}
+          style={styles.menuButton}
+        >
+          <Ionicons name="menu" size={24} color="#000000" />
+        </TouchableOpacity>
+      </View>
+    </View>
 
+    {/* Scrollable Content */}
+    <ScrollView style={styles.scrollContainer}>
+      <CompletionBanner percentage={calculateProfileCompletion()} />
+      
       <ProfileHeader
-  avatarUrl={profile.avatarUrl}
-  avatarKey={profile.avatarKey}
-  onImageUpdate={handleAvatarUpload}
-/>
+        avatarUrl={profile.avatarUrl}
+        avatarKey={profile.avatarKey}
+        onImageUpdate={handleAvatarUpload}
+      />
 
       <ProfileSection
         title="Basic Information"
@@ -206,15 +227,15 @@ const handleResumeUpload = async (resumeUri) => {
         <BasicInfoForm
           data={profile}
           editing={editingSections.basic}
-          onChange={data => setProfile(prev => ({ ...prev, ...data }))} // Update form data locally
+          onChange={data => setProfile(prev => ({ ...prev, ...data }))}
         />
       </ProfileSection>
 
       <ProfileSection
         title="About"
         editing={editingSections.about}
-        onEdit={() => setEditingSections(prev => ({ ...prev, about: true }))} // Enable editing
-        onSave={() => handleUpdateProfile('about', { about: profile.about })} // Save about section
+        onEdit={() => setEditingSections(prev => ({ ...prev, about: true }))}
+        onSave={() => handleUpdateProfile('about', { about: profile.about })}
       >
         <AboutForm
           data={profile}
@@ -250,42 +271,80 @@ const handleResumeUpload = async (resumeUri) => {
       </ProfileSection>
 
       <ProfileSection
-  title="Resume"
-  editing={editingSections.resume}
-  onEdit={() => setEditingSections((prev) => ({ ...prev, resume: true }))}
-  onSave={() => {
-    if (profile.resumeTemp && profile.resumeTemp.uri) {
-      handleResumeUpload(profile.resumeTemp.uri);
-    }
-    setEditingSections((prev) => ({ ...prev, resume: false }));
-  }}
->
-  <ResumeUploadForm
-    data={{
-      resumeUrl: profile.resumeUrl,
-      resumeTemp: profile.resumeTemp
-    }}
-    editing={editingSections.resume}
-    onChange={(fileData) => {
-      console.log('Resume file data:', fileData);
-      setProfile((prev) => ({
-        ...prev,
-        resumeTemp: fileData,
-        resumeUrl: fileData ? fileData.uri : null
-      }));
-    }}
-  />
-</ProfileSection>
-
+        title="Resume"
+        editing={editingSections.resume}
+        onEdit={() => setEditingSections((prev) => ({ ...prev, resume: true }))}
+        onSave={() => {
+          if (profile.resumeTemp && profile.resumeTemp.uri) {
+            handleResumeUpload(profile.resumeTemp.uri);
+          }
+          setEditingSections((prev) => ({ ...prev, resume: false }));
+        }}
+      >
+        <ResumeUploadForm
+          data={{
+            resumeUrl: profile.resumeUrl,
+            resumeTemp: profile.resumeTemp
+          }}
+          editing={editingSections.resume}
+          onChange={(fileData) => {
+            console.log('Resume file data:', fileData);
+            setProfile((prev) => ({
+              ...prev,
+              resumeTemp: fileData,
+              resumeUrl: fileData ? fileData.uri : null
+            }));
+          }}
+        />
+      </ProfileSection>
     </ScrollView>
-  );
+    <CustomDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+        />
+  </View>
+);
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
+mainContainer: {
+  flex: 1,
+  backgroundColor: '#f5f5f5',
+},
+headerContainer: {
+  //backgroundColor: '#ffffff',
+  marginTop: 20,
+  padding: 16,
+  // borderBottomWidth: 1,
+  // borderBottomColor: '#e0e0e0',
+  // elevation: 2, // Android shadow
+  // shadowColor: '#000000', // iOS shadow
+  // shadowOffset: { width: 0, height: 2 },
+  // shadowOpacity: 0.1,
+  // shadowRadius: 4,
+},
+scrollContainer: {
+  flex: 1,
+},
+headerContent: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between', // Changed to space-between
+},
+headerTextContainer: {
+  flex: 1,
+  alignItems: 'center',
+},
+headerText: {
+  fontSize: 20,
+  fontWeight: '600',
+},
+menuButton: {
+  padding: 4,
+},
+scrollContainer: {
+  flex: 1,
+},
 });
 
 export default UserProfileScreen;
