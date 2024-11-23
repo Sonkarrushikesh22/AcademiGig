@@ -1,10 +1,12 @@
 const router = require('express').Router();
-const jobController = require('../controllers/employerController');
+const employerController = require('../controllers/employerController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 router.post('/createjob',
     authMiddleware('employer'),
-  jobController.createJob
+  employerController.createJob
 );
+
+router.get('/job-logo-upload-url', authMiddleware('employer'), employerController.getUploadPresignedUrl);
 
 module.exports = router;

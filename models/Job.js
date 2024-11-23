@@ -14,30 +14,18 @@ const JobSchema = new Schema({
     type: String,
     required: true,
   },
-  requirements: [String], // Array of requirements
-  responsibilities: [String], // Array of responsibilities
+  requirements: [String],
+  responsibilities: [String],
   salary: {
-    min: {
-      type: Number,
-      required: false,
-    },
-    max: {
-      type: Number,
-      required: false,
-    },
-    currency: {
-      type: String,
-      default: 'USD',
-    },
+    min: { type: Number },
+    max: { type: Number },
+    currency: { type: String, default: 'USD' },
   },
   location: {
     city: String,
     state: String,
     country: String,
-    remote: {
-      type: Boolean,
-      default: false,
-    },
+    remote: { type: Boolean, default: false },
   },
   jobType: {
     type: String,
@@ -48,24 +36,19 @@ const JobSchema = new Schema({
     type: String,
     required: true,
   },
-  postedDate: {
-    type: Date,
-    default: Date.now,
-  },
-  applicationDeadline: {
-    type: Date,
-  },
-  skills: [String], // Required skills
+  postedDate: { type: Date, default: Date.now },
+  applicationDeadline: { type: Date },
+  skills: [String],
   experienceLevel: {
     type: String,
     enum: ['Entry', 'Mid', 'Senior'],
   },
   employers: {
     type: Schema.Types.ObjectId,
-    ref: 'Employer', // Reference to the Employer model
+    ref: 'Employer',
     required: true,
   },
-  companyLogoUrl: String,
+  companyLogoKey: String,
 });
 
 module.exports = mongoose.model('Job', JobSchema);

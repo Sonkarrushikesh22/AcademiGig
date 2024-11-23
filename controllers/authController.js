@@ -40,7 +40,7 @@ exports.registerEmployer = async (req, res) => {
 
         // Generate token for the new employer
         const token = jwt.sign({ userId: newEmployer._id, role: "employer" }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
+        
         res.status(201).json({ message: "Employer registered successfully", token, data: newEmployer });
     } catch (error) {
         console.error(error);

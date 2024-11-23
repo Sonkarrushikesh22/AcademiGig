@@ -20,7 +20,10 @@ exports.getUploadPresignedUrl = async (req, res) => {
       folder = 'user-profiles';  // Folder for profile images
     } else if (fileType === 'resume') {
       folder = 'user-resumes';  // Folder for resumes
-    } else {
+    }else if (fileType === 'job-logo') {
+      folder = 'job-logos';
+    } 
+    else {
       return res.status(400).json({ message: 'Invalid file type. Use "avatar" or "resume".' });
     }
 
@@ -50,7 +53,10 @@ exports.getDownloadPresignedUrl = async (req, res) => {
       folder = 'user-profiles';
     } else if (fileType === 'resume') {
       folder = 'user-resumes';
-    } else {
+    }else if (fileType === 'job-logo') {
+      folder = 'job-logos';
+    }
+     else {
       folder = ''; // default or handle other file types as needed
     }
 
@@ -146,11 +152,23 @@ exports.getProfile = async (req, res) => {
     const userId = req.user.userId;
 
     // Fetch the user's profile
-    const profile = await Profile.findOne({ user: userId });
+    let profile = await Profile.findOne({ user: userId });
 
     if (!profile) {
-      return res.status(404).json({ message: 'Profile not found' });
+      profile = new Profile({
+        user: userId,
+        name: '',
+        location: '',
+        phone: '',
+        about: '',
+        skills: [],
+        experience: [],
+        avatarKey: null,
+        resumeKey: null
+      });
+      await profile.save();
     }
+
 
     // Generate presigned URLs for avatar and resume if they exist
     const avatarUrl = profile.avatarKey ? await s3Service.getObjectURL(`user-profiles/${profile.avatarKey}`) : null;

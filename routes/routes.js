@@ -4,6 +4,7 @@ const employerRoutes = require('./employerRoutes.js');
 const userRoutes = require('./userRoutes');
 const savedJobsRoutes = require('./savedJobsRoutes');
 const applicationRoutes = require('./applicationRoutes');
+const jobRoutes = require('./jobRoutes');
 
 const base = '/api/v1';
 
@@ -12,6 +13,7 @@ router.use(`${base}/user`, userRoutes);
 router.use(`${base}/employer`, employerRoutes);
 router.use(`${base}/saved-jobs`, savedJobsRoutes);
 router.use(`${base}/application`, applicationRoutes);
+router.use(`${base}/job`, jobRoutes);
 
 module.exports = router;
 
