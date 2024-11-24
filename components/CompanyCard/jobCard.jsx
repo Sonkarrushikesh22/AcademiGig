@@ -1,28 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import LogoPlaceholder from './logoPlaceholder';
 
 const { width } = Dimensions.get('window');
 
-const SmallCard = ({ job, onSave, getLogoUrl }) => {
+const SmallCard = ({ job, onSave, getLogoUrl, onPress, isSaved }) => {
+  const [logo, setLogo] = useState({ type: 'placeholder' });
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      if (job.logoKey) {
+        const result = await getLogoUrl(job.logoKey);
+        setLogo(result);
+      }
+    };
+    
+    loadLogo();
+  }, [job.logoKey, getLogoUrl]);
+
+  const renderLogo = () => {
+    if (logo.type === 'file') {
+      return (
+        <Image
+          source={{ uri: `file://${logo.path}` }}
+          style={styles.logoSmall}
+          resizeMode="cover"
+        />
+      );
+    }
+    return <LogoPlaceholder size={50} />;
+  };
+
   return (
-    <View style={styles.card}>
-      {/* Save Icon */}
-      <TouchableOpacity style={styles.saveButton} onPress={() => onSave(job)}>
-        <Feather name="bookmark" size={20} color="#007BFF" />
+    <TouchableOpacity style={styles.card} onPress={onPress}>
+      <TouchableOpacity 
+        style={styles.saveButton} 
+        onPress={() => onSave(job)}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Feather 
+          name={isSaved ? "bookmark" : "bookmark"} 
+          size={20} 
+          color={isSaved ? "#007BFF" : "#6B7280"} 
+        />
       </TouchableOpacity>
 
-      {/* Job Logo */}
-      <Image
-        source={{
-          uri: job.logoKey
-            ? getLogoUrl(job.logoKey)
-            : 'https://via.placeholder.com/50',
-        }}
-        style={styles.logoSmall}
-      />
+      <View style={styles.logoContainer}>
+        {renderLogo()}
+      </View>
 
-      {/* Job Info */}
       <View style={styles.infoContainer}>
         <Text style={styles.title}>{job.title}</Text>
         <Text style={styles.companyName}>{job.company}</Text>
@@ -31,7 +58,7 @@ const SmallCard = ({ job, onSave, getLogoUrl }) => {
           {job.salary?.currency ? `${job.salary.currency} salary` : 'Not specified'}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -40,7 +67,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     padding: 15,
     marginVertical: 8,
     marginHorizontal: width * 0.05,
@@ -57,12 +83,15 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
     zIndex: 10,
+    padding: 5,
+  },
+  logoContainer: {
+    marginRight: 15,
   },
   logoSmall: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    marginRight: 15, // Adds spacing between logo and info
   },
   infoContainer: {
     flex: 1,

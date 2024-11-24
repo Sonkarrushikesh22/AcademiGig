@@ -17,8 +17,9 @@ const TabsLayout = () => {
         height: 70,
         alignItems: 'center',
         borderRadius:35,
-        marginHorizontal:15,
+         marginHorizontal:15,
         marginBottom:15,
+      backgroundColor: 'white',
          
       },
       }} >

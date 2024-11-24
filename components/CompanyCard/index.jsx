@@ -1,26 +1,48 @@
-// index.js
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
 import SmallCard from './jobCard';
 import LargeCard from './expandedJobcardf';
 
-const JobCard = ({ job, onApply }) => {
+const JobCard = ({ job, onSave, onUnsave, onApply, getLogoUrl }) => {
   const [isPopupVisible, setPopupVisible] = useState(false);
+  const [isSaved, setIsSaved] = useState(job.isSaved || false);
+
+  const handleSave = async () => {
+    try {
+      if (isSaved) {
+        await onUnsave(job);
+        setIsSaved(false);
+      } else {
+        await onSave(job);
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error('Error toggling save status:', error);
+    }
+  };
+
+  const handleCardPress = () => {
+    setPopupVisible(true);
+  };
 
   return (
-    <View>
-      <SmallCard job={job} onPress={() => setPopupVisible(true)} />
-      {isPopupVisible && (
-        <BlurView intensity={50} style={StyleSheet.absoluteFill} tint="dark">
-          <LargeCard
-            job={job}
-            onClose={() => setPopupVisible(false)}
-            onApply={onApply}
-          />
-        </BlurView>
-      )}
-    </View>
+    <>
+      <SmallCard 
+        job={job} 
+        onPress={handleCardPress}
+        onSave={handleSave}
+        getLogoUrl={getLogoUrl}
+        isSaved={isSaved}
+      />
+      <LargeCard
+        job={job}
+        onClose={() => setPopupVisible(false)}
+        onApply={onApply}
+        onSave={handleSave}
+        getLogoUrl={getLogoUrl}
+        isSaved={isSaved}
+        visible={isPopupVisible}
+      />
+    </>
   );
 };
 

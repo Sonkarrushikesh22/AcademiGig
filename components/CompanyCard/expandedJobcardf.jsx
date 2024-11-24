@@ -1,74 +1,146 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Modal, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import LogoPlaceholder from './logoPlaceholder';
+import { BlurView } from 'expo-blur';
 
 const { width, height } = Dimensions.get('window');
 
-const LargeCard = ({ job, onSave, onApply, getLogoUrl, onClose }) => {
+const LargeCard = ({ job, onSave, onApply, getLogoUrl, onClose, visible, isSaved }) => {
+  const [logo, setLogo] = useState({ type: 'placeholder' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      if (job.logoKey) {
+        const result = await getLogoUrl(job.logoKey);
+        setLogo(result);
+      }
+    };
+    
+    loadLogo();
+  }, [job.logoKey, getLogoUrl]);
+
+  const renderLogo = () => {
+    if (logo.type === 'file') {
+      return (
+        <Image
+          source={{ uri: `file://${logo.path}` }}
+          style={styles.logoLarge}
+          resizeMode="cover"
+        />
+      );
+    }
+    return <LogoPlaceholder size={100} />;
+  };
+
+  const handleApply = async () => {
+    if (isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+      await onApply(job);
+    } catch (error) {
+      Alert.alert(
+        'Application Failed',
+        error.message || 'Failed to submit application. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const renderApplyButton = () => {
+    if (job.hasApplied) {
+      return (
+        <TouchableOpacity style={[styles.applyButton, styles.appliedButton]} disabled>
+          <Text style={styles.applyButtonText}>Already Applied</Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity 
+        style={[styles.applyButton, isSubmitting && styles.submittingButton]} 
+        onPress={handleApply}
+        disabled={isSubmitting}
+      >
+        <Text style={styles.applyButtonText}>
+          {isSubmitting ? 'Submitting...' : 'Apply Now'}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        {/* Save Icon */}
-        <TouchableOpacity style={styles.saveButton} onPress={() => onSave(job)}>
-          <Feather name="bookmark" size={24} color="#007BFF" />
-        </TouchableOpacity>
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <BlurView intensity={50} style={styles.container} tint="dark">
+        <View style={styles.card}>
+          <TouchableOpacity 
+            style={styles.saveButton} 
+            onPress={() => onSave(job)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Feather 
+              name={isSaved ? "bookmark" : "bookmark"} 
+              size={24} 
+              color={isSaved ? "#007BFF" : "#6B7280"} 
+            />
+          </TouchableOpacity>
 
-        {/* Close Icon */}
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Feather name="x" size={24} color="#6B7280" />
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.closeButton} 
+            onPress={onClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Feather name="x" size={24} color="#6B7280" />
+          </TouchableOpacity>
 
-        <ScrollView>
-          {/* Job Logo */}
-          <Image
-            source={{
-              uri: job.logoKey
-                ? getLogoUrl(job.logoKey)
-                : 'https://via.placeholder.com/100',
-            }}
-            style={styles.logoLarge}
-          />
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.logoContainer}>
+              {renderLogo()}
+            </View>
 
-          {/* Job Details */}
-          <Text style={styles.title}>{job.title}</Text>
-          <Text style={styles.companyName}>{job.company}</Text>
-          <Text style={styles.jobType}>{job.jobType}</Text>
-          <Text style={styles.salary}>
-            {job.salary?.currency ? `${job.salary.currency} salary` : 'Not specified'}
-          </Text>
+            <Text style={styles.title}>{job.title}</Text>
+            <Text style={styles.companyName}>{job.company}</Text>
+            <Text style={styles.jobType}>{job.jobType}</Text>
+            <Text style={styles.salary}>
+              {job.salary?.currency ? `${job.salary.currency} salary` : 'Not specified'}
+            </Text>
 
-          {/* Description */}
-          <Text style={styles.sectionHeader}>Description</Text>
-          <Text style={styles.description}>{job.description}</Text>
+            <Text style={styles.sectionHeader}>Description</Text>
+            <Text style={styles.description}>{job.description}</Text>
 
-          {/* Requirements */}
-          <Text style={styles.sectionHeader}>Requirements</Text>
-          {job.requirements.map((req, index) => (
-            <Text key={index} style={styles.listItem}>{`• ${req}`}</Text>
-          ))}
+            <Text style={styles.sectionHeader}>Requirements</Text>
+            {job.requirements?.map((req, index) => (
+              <Text key={index} style={styles.listItem}>{`• ${req}`}</Text>
+            ))}
 
-          {/* Responsibilities */}
-          <Text style={styles.sectionHeader}>Responsibilities</Text>
-          {job.responsibilities.map((resp, index) => (
-            <Text key={index} style={styles.listItem}>{`• ${resp}`}</Text>
-          ))}
-        </ScrollView>
-
-        {/* Apply Button */}
-        <TouchableOpacity style={styles.applyButton} onPress={() => onApply(job)}>
-          <Text style={styles.applyButtonText}>Apply Now</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+            <Text style={styles.sectionHeader}>Responsibilities</Text>
+            {job.responsibilities?.map((resp, index) => (
+              <Text key={index} style={styles.listItem}>{`• ${resp}`}</Text>
+            ))}
+          </ScrollView>
+          {renderApplyButton()}
+         
+        </View>
+       
+      </BlurView>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   card: {
     width: width * 0.9,
@@ -87,19 +159,24 @@ const styles = StyleSheet.create({
     top: 15,
     right: 50,
     zIndex: 10,
+    padding: 5,
   },
   closeButton: {
     position: 'absolute',
     top: 15,
     right: 15,
     zIndex: 10,
+    padding: 5,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
   logoLarge: {
     width: 100,
     height: 100,
     borderRadius: 15,
-    marginBottom: 20,
-    alignSelf: 'flex-start',
   },
   title: {
     fontSize: 20,
@@ -138,6 +215,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginBottom: 5,
+    paddingLeft: 10,
   },
   applyButton: {
     marginTop: 20,
@@ -150,6 +228,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  submittingButton: {
+    backgroundColor: '#4A90E2',
+    opacity: 0.7,
+  },
+  appliedButton: {
+    backgroundColor: '#6B7280',
   },
 });
 

@@ -1,36 +1,12 @@
-import { View, Text, ScrollView, FlatList, TouchableOpacity } from "react-native";
 import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import  SearchInput  from "../../components/Search/SearchInput";
-// import Chat from "../../components/Headertabs/chat"
-// import Notification from "../../components/Headertabs/notifications";
-import { useRouter, Link } from 'expo-router';
-
-const Styles = {
-  Headercontainer: {
-    flexDirection: "row",
-    //backgroundColor: "white",
-    paddingVertical: 20,
-  },
-  logo: {
-    //  paddingTop:10,
-        flex: 1, 
-    fontSize: 25,
-    fontWeight: "bold",
-    color: "black",
-  },
-  icons: {
-    flexDirection: "row",
-    alignItems: 'center',
-
-  },
-  body: {
-   // backgroundColor: "white",
-    paddingHorizontal:20
-  },
-};
+import { TouchableOpacity } from "react-native";
+import { useRouter } from 'expo-router';
+import SearchInput from "../../components/Search/SearchInput";
+import JobsList from "../../components/CompanyCard/jobList";
 
 const Home = () => {
   const router = useRouter();
@@ -42,36 +18,81 @@ const Home = () => {
   const handleFilter = () => {
     console.log("Filter icon clicked");
   };
+
   return (
-    <SafeAreaView>
-      <View style={Styles.body}>
-        <View style={Styles.Headercontainer}>
-          <Text style={Styles.logo}>AcademiGig</Text>
-          <View style={Styles.icons}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <Text style={styles.logo}>AcademiGig</Text>
+          <View style={styles.icons}>
             <TouchableOpacity
-             onPress={() => router.push("/HeaderTabs/notifications")}
+              onPress={() => router.push("/HeaderTabs/notifications")}
+              style={styles.iconButton}
             >
-            <SimpleLineIcons name="bell" size={24} color="black" paddingHorizontal={5} />
+              <SimpleLineIcons name="bell" size={24} color="black" />
             </TouchableOpacity>
             <TouchableOpacity
-            onPress={() => router.push("/HeaderTabs/chat")}
+              onPress={() => router.push("/HeaderTabs/chat")}
+              style={styles.iconButton}
             >
-            <Ionicons name="chatbubbles-outline" size={24} color="black" paddingHorizontal={5}/>
+              <Ionicons name="chatbubbles-outline" size={24} color="black" />
             </TouchableOpacity>
           </View>
         </View>
-        
-          <View>
+
+        {/* Search */}
+        <View style={styles.searchContainer}>
           <SearchInput
-          placeholder="Search for jobs..."
-          onSearch={handleSearch}
-          onFilter={handleFilter}
-        />
-          </View>
-        
+            placeholder="Search for jobs..."
+            onSearch={handleSearch}
+            onFilter={handleFilter}
+          />
+        </View>
+
+        {/* Jobs List */}
+        <View style={styles.jobsListContainer}>
+          <JobsList />
+        </View>
       </View>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+    marginBottom: -20,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  logo: {
+    fontSize: 25,
+    fontWeight: "bold",
+    color: "black",
+  },
+  icons: {
+    flexDirection: "row",
+    alignItems: 'center',
+  },
+  iconButton: {
+    paddingHorizontal: 5,
+  },
+  searchContainer: {
+    marginBottom: 20,
+  },
+  jobsListContainer: {
+    flex: 1,
+  },
+});
 
 export default Home;
