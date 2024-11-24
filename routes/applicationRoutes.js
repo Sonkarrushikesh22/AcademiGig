@@ -2,15 +2,15 @@ const router = require('express').Router();
 const applicationController = require('../controllers/applicationController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// Corrected route definition
 router.post('/apply',
   authMiddleware('user'), 
   applicationController.applyToJob
 );
 
-router.get('/get-applications-by-user/:userId', 
+// Updated route without userId parameter
+router.get('/applied-jobs', 
   authMiddleware('user'), 
-  applicationController.getApplicationsByUser
+  applicationController.getAppliedJobs 
 );
 
 router.get('/get-applications-by-job/:jobId', 

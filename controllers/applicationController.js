@@ -2,11 +2,15 @@
 const Application = require('../models/Application');
 const User = require('../models/User');
 const Job = require('../models/Job');
+const Profile = require('../models/Profile');
 
 const applyToJob = async (req, res) => {
   try {
     const userId = req.user.userId;
     const jobId = req.body.jobId;
+
+    // Add error logging
+    console.log('Applying to job:', { userId, jobId });
 
     // Check if the job exists
     const job = await Job.findById(jobId);
@@ -20,72 +24,78 @@ const applyToJob = async (req, res) => {
       return res.status(400).json({ message: 'Already applied for this job' });
     }
 
-    // Retrieve user's profile
+    // Get user's profile
     const profile = await Profile.findOne({ user: userId });
     if (!profile) {
-      return res.status(404).json({ message: 'Profile not found' });
+      return res.status(400).json({ 
+        message: 'Please complete your profile before applying to jobs' 
+      });
     }
 
-    // Generate presigned URL for the resume
-    const { getObjectURL } = require('../utils/s3'); // Import the S3 utilities
-    const resumeUrl = await getObjectURL(`user-resumes/${profile.resumeKey}`);
-
-    // Create a new job application
+    // Create a new job application with profile reference
     const application = new Application({
       user: userId,
       job: jobId,
-      coverLetter: req.body.coverLetter || '',
+      profile: profile._id, 
       status: 'Applied',
     });
 
     // Save the application
     await application.save();
 
+    // Populate job details before sending response
+    await application.populate('job');
+
     res.status(201).json({
+      success: true,
       message: 'Job application submitted successfully',
-      application: {
-        ...application.toObject(),
-        profile,
-        resumeUrl,
-      },
+      application: application
     });
   } catch (error) {
     console.error('Error applying to job:', error);
-    res.status(500).json({ message: 'Internal Server Error', error });
+    res.status(500).json({ 
+      message: 'Internal Server Error', 
+      error: error.message 
+    });
   }
 };
 
-
-// for user to fetch applied jobs
-const getApplicationsByUser = async (req, res) => {
+const getAppliedJobs = async (req, res) => {
   try {
     const userId = req.user.userId;
+    console.log('Fetching applied jobs for user:', userId);
 
-    // Find applications submitted by the user
-    const applications = await Application.find({ user: userId }).populate('job', 'title company');
-
-    // Include presigned URLs for resumes
-    const { getObjectURL } = require('../utils/s3'); // Import the S3 utilities
-    const applicationsWithDetails = await Promise.all(
-      applications.map(async (application) => {
-        const profile = await Profile.findOne({ user: userId });
-        const resumeUrl = profile?.resumeKey ? await getObjectURL(`user-resumes/${profile.resumeKey}`) : null;
-
-        return {
-          ...application.toObject(),
-          profile,
-          resumeUrl,
-        };
+    // Find applications and populate complete job details
+    const applications = await Application.find({ user: userId })
+      .populate({
+        path: 'job',
+        select: 'title company description category jobType experienceLevel location companyLogoUrl postedDate'
       })
-    );
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .lean();
 
-    res.status(200).json(applicationsWithDetails);
+    // Transform data to focus on jobs with application status
+    const appliedJobs = applications.map(app => ({
+      job: app.job,
+      applicationId: app._id,
+      status: app.status,
+      appliedDate: app.createdAt
+    }));
+
+    res.status(200).json({
+      success: true,
+      appliedJobs
+    });
+
   } catch (error) {
-    console.error('Error fetching user applications:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.error('Error fetching applied jobs:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch applied jobs',
+      error: error.message 
+    });
   }
 };
-
   
   // for employer to fetch applications for a job
   const getApplicationsByJob = async (req, res) => {
@@ -101,7 +111,7 @@ const getApplicationsByUser = async (req, res) => {
 
   module.exports = {
     applyToJob,
-    getApplicationsByUser,
+    getAppliedJobs ,
     getApplicationsByJob,
   };
   

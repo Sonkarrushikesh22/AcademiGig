@@ -35,7 +35,7 @@ const saveJob = async (req, res) => {
 // Controller to get saved jobs
 const getSavedJobs = async (req, res) => {
   try {
-    const userId = req.userId; // Extract user ID from the decoded JWT token
+    const userId = req.user.userId;// Extract user ID from the decoded JWT token
 
     // Find saved jobs for the user and populate job details
     const savedJobs = await SavedJobs.find({ user: userId }).populate('job');
@@ -50,7 +50,7 @@ const getSavedJobs = async (req, res) => {
 // Controller to delete a saved job
 const deleteSavedJob = async (req, res) => {
   try {
-    const userId = req.userId; // Extract user ID from the decoded JWT token
+    const userId = req.user.userId;// Extract user ID from the decoded JWT token
     const jobId = String(req.params.jobId); // Ensure jobId is a string
 
     // Debug log

@@ -1,9 +1,6 @@
 const Job = require('../models/Job');
 const s3Service = require('../services/fileUploadService');
 
-
-
-
 exports.getAllJobs = async (req, res) => {
   try {
     const { 
