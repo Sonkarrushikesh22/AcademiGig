@@ -65,11 +65,10 @@ const getAppliedJobs = async (req, res) => {
     const userId = req.user.userId;
     console.log('Fetching applied jobs for user:', userId);
 
-    // Find applications and populate complete job details
     const applications = await Application.find({ user: userId })
       .populate({
         path: 'job',
-        select: 'title company description category jobType experienceLevel location companyLogoUrl postedDate'
+        select: 'title company description category jobType experienceLevel location companyLogoUrl  companyLogoKey salary postedDate'
       })
       .sort({ createdAt: -1 }) // Sort by newest first
       .lean();
@@ -81,6 +80,8 @@ const getAppliedJobs = async (req, res) => {
       status: app.status,
       appliedDate: app.createdAt
     }));
+
+    console.log('Applications fetched:', appliedJobs); // Debugging
 
     res.status(200).json({
       success: true,
@@ -96,6 +97,7 @@ const getAppliedJobs = async (req, res) => {
     });
   }
 };
+
   
   // for employer to fetch applications for a job
   const getApplicationsByJob = async (req, res) => {

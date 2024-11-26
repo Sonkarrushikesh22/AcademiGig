@@ -119,7 +119,7 @@ exports.getDownloadPresignedUrl = async (req, res) => {
     }
 
     // Generate presigned URL for downloading the file
-    const presignedUrl = await s3Service.getObjectURL(`${folder}/${key}`);
+    const presignedUrl = await s3Service.getObjectURL(`${key}`);
 
     // Return the presigned URL to the client
     res.status(200).json({ presignedUrl });
