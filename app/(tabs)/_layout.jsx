@@ -44,6 +44,7 @@ const TabsLayout = () => {
         name="saved"
         options={{
           title: 'Saved',
+          headerShown: false ,
           tabBarIcon: ({ color }) => <FontAwesome size={30} name="bookmark" color={color} />,
         }}
       />

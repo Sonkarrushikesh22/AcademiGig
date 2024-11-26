@@ -11,6 +11,14 @@ import {
 import JobCard from '../../components/CompanyCard/index';
 import { getSavedJobs, getDownloadPresignedUrl, unsaveJob, downloadAndCacheLogo } from '../../api/jobsapi';
 
+
+
+const CustomHeader = ({ title, onBack }) => (
+  <View style={styles.headerContainer}>
+    <Text style={styles.headerTitle}>{title}</Text>
+  </View>
+);
+
 const Saved = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [savedJobs, setSavedJobs] = useState([]);
@@ -140,6 +148,7 @@ const Saved = () => {
 
   return (
     <View style={styles.container}>
+        <CustomHeader title="Saved"/>
       <TextInput
         style={styles.searchInput}
         placeholder="Search saved jobs"
@@ -190,6 +199,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  headerContainer: {
+
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    marginTop:20,
+    borderBottomColor: '#E5E7EB',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#000',
   },
   searchInput: {
     height: 40,

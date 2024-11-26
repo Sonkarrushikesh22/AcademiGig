@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, ActivityIndicator, Text, StyleSheet, RefreshControl } from 'react-native';
+import { View, FlatList, ActivityIndicator, Text, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { Ionicons } from '@expo/vector-icons'; // Icon for back button
 import JobCard from '../../components/CompanyCard/index';
 import { getAppliedJobs, getDownloadPresignedUrl, downloadAndCacheLogo } from '../../api/jobsapi';
 
@@ -9,6 +11,7 @@ const AppliedJobs = () => {
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [logoCache, setLogoCache] = useState({});
+  const navigation = useNavigation(); // Get navigation instance
 
   const fetchAppliedJobs = async (isRefreshing = false) => {
     try {
@@ -27,7 +30,7 @@ const AppliedJobs = () => {
         applicationDate: application.createdAt,
         applicationStatus: application.status,
         logoKey: application.job.companyLogoKey,
-            }));
+      }));
 
       setAppliedJobs(transformedJobs);
     } catch (err) {
@@ -92,7 +95,12 @@ const AppliedJobs = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Applied Jobs</Text>
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.header}>Applied Jobs</Text>
+      </View>
       <FlatList
         data={appliedJobs}
         renderItem={({ item }) => (
@@ -127,11 +135,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
     backgroundColor: '#fff',
+    marginTop:20
+  },
+  header: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '600',
+   marginLeft: -18,
+    textAlign: 'center',
+
   },
   centerContainer: {
     flex: 1,
@@ -147,7 +164,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
-  }
+  },
 });
 
 export default AppliedJobs;
