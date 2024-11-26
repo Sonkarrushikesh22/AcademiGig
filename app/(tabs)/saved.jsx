@@ -27,7 +27,9 @@ const Saved = () => {
     company: savedJob.job.company,
     jobType: savedJob.job.jobType,
     salary: {
-      currency: savedJob.job.salary || 'Salary not specified'
+      currency: savedJob.job.salary?.currency || 'Salary not specified',
+      min: savedJob.job.salary?.min,
+      max: savedJob.job.salary?.max
     },
     description: savedJob.job.description,
     requirements: Array.isArray(savedJob.job.requirements) ? savedJob.job.requirements : [],

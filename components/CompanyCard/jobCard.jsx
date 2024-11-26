@@ -55,8 +55,10 @@ const SmallCard = ({ job, onSave, getLogoUrl, onPress, isSaved }) => {
         <Text style={styles.companyName}>{job.company}</Text>
         <Text style={styles.jobType}>{job.jobType}</Text>
         <Text style={styles.salary}>
-          {job.salary?.currency ? `${job.salary.currency} salary` : 'Not specified'}
-        </Text>
+  {job.salary?.min && job.salary?.max 
+    ? `${job.salary.min} - ${job.salary.max} ${job.salary.currency} ` 
+    : 'Not specified'}
+</Text>
       </View>
     </TouchableOpacity>
   );

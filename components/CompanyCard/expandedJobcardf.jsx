@@ -1,13 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Modal, Alert } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import LogoPlaceholder from './logoPlaceholder';
-import { BlurView } from 'expo-blur';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+  Modal,
+  Alert,
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import LogoPlaceholder from "./logoPlaceholder";
+import { BlurView } from "expo-blur";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
-const LargeCard = ({ job, onSave, onApply, getLogoUrl, onClose, visible, isSaved }) => {
-  const [logo, setLogo] = useState({ type: 'placeholder' });
+const LargeCard = ({
+  job,
+  onSave,
+  onApply,
+  getLogoUrl,
+  onClose,
+  visible,
+  isSaved,
+}) => {
+  const [logo, setLogo] = useState({ type: "placeholder" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -36,14 +54,14 @@ const LargeCard = ({ job, onSave, onApply, getLogoUrl, onClose, visible, isSaved
 
   const handleApply = async () => {
     if (isSubmitting) return;
-    
+
     try {
       setIsSubmitting(true);
       await onApply(job);
     } catch (error) {
       Alert.alert(
-        'Application Failed',
-        error.message || 'Failed to submit application. Please try again.'
+        "Application Failed",
+        error.message || "Failed to submit application. Please try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -53,20 +71,23 @@ const LargeCard = ({ job, onSave, onApply, getLogoUrl, onClose, visible, isSaved
   const renderApplyButton = () => {
     if (job.hasApplied) {
       return (
-        <TouchableOpacity style={[styles.applyButton, styles.appliedButton]} disabled>
+        <TouchableOpacity
+          style={[styles.applyButton, styles.appliedButton]}
+          disabled
+        >
           <Text style={styles.applyButtonText}>Already Applied</Text>
         </TouchableOpacity>
       );
     }
 
     return (
-      <TouchableOpacity 
-        style={[styles.applyButton, isSubmitting && styles.submittingButton]} 
+      <TouchableOpacity
+        style={[styles.applyButton, isSubmitting && styles.submittingButton]}
         onPress={handleApply}
         disabled={isSubmitting}
       >
         <Text style={styles.applyButtonText}>
-          {isSubmitting ? 'Submitting...' : 'Apply Now'}
+          {isSubmitting ? "Submitting..." : "Apply Now"}
         </Text>
       </TouchableOpacity>
     );
@@ -81,20 +102,20 @@ const LargeCard = ({ job, onSave, onApply, getLogoUrl, onClose, visible, isSaved
     >
       <BlurView intensity={50} style={styles.container} tint="dark">
         <View style={styles.card}>
-          <TouchableOpacity 
-            style={styles.saveButton} 
+          <TouchableOpacity
+            style={styles.saveButton}
             onPress={() => onSave(job)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Feather 
-              name={isSaved ? "bookmark" : "bookmark"} 
-              size={24} 
-              color={isSaved ? "#007BFF" : "#6B7280"} 
+            <Feather
+              name={isSaved ? "bookmark" : "bookmark"}
+              size={24}
+              color={isSaved ? "#007BFF" : "#6B7280"}
             />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.closeButton} 
+          <TouchableOpacity
+            style={styles.closeButton}
             onPress={onClose}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -102,15 +123,15 @@ const LargeCard = ({ job, onSave, onApply, getLogoUrl, onClose, visible, isSaved
           </TouchableOpacity>
 
           <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.logoContainer}>
-              {renderLogo()}
-            </View>
+            <View style={styles.logoContainer}>{renderLogo()}</View>
 
             <Text style={styles.title}>{job.title}</Text>
             <Text style={styles.companyName}>{job.company}</Text>
             <Text style={styles.jobType}>{job.jobType}</Text>
             <Text style={styles.salary}>
-              {job.salary?.currency ? `${job.salary.currency} salary` : 'Not specified'}
+              {job.salary?.min && job.salary?.max
+                ? ` ${job.salary.min} - ${job.salary.max} ${job.salary.currency}`
+                : "Not specified"}
             </Text>
 
             <Text style={styles.sectionHeader}>Description</Text>
@@ -125,11 +146,35 @@ const LargeCard = ({ job, onSave, onApply, getLogoUrl, onClose, visible, isSaved
             {job.responsibilities?.map((resp, index) => (
               <Text key={index} style={styles.listItem}>{`• ${resp}`}</Text>
             ))}
+            <Text style={styles.sectionHeader}>Skills</Text>
+            {job.skills?.map((skill, index) => (
+              <Text key={index} style={styles.listItem}>{`• ${skill}`}</Text>
+            ))}
+
+            <Text style={styles.sectionHeader}>Additional Details</Text>
+            <View style={styles.detailsContainer}>
+              <Text style={styles.detailText}>
+                Experience Level: {job.experienceLevel}
+              </Text>
+              <Text style={styles.detailText}>Category: {job.category}</Text>
+              <Text style={styles.detailText}>
+                Location:{" "}
+                {job.location?.remote
+                  ? "Remote"
+                  : `${job.location?.city || "N/A"}, ${
+                      job.location?.state || ""
+                    }, ${job.location?.country || ""}`}
+              </Text>
+              {job.applicationDeadline && (
+                <Text style={styles.detailText}>
+                  Application Deadline:{" "}
+                  {new Date(job.applicationDeadline).toLocaleDateString()}
+                </Text>
+              )}
+            </View>
           </ScrollView>
           {renderApplyButton()}
-         
         </View>
-       
       </BlurView>
     </Modal>
   );
@@ -138,39 +183,39 @@ const LargeCard = ({ job, onSave, onApply, getLogoUrl, onClose, visible, isSaved
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   card: {
     width: width * 0.9,
     maxHeight: height * 0.8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 20,
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
   },
   saveButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 15,
     right: 50,
     zIndex: 10,
     padding: 5,
   },
   closeButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 15,
     right: 15,
     zIndex: 10,
     padding: 5,
   },
   logoContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 20,
   },
   logoLarge: {
@@ -180,61 +225,72 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
-    color: '#000',
+    color: "#000",
   },
   companyName: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   jobType: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   salary: {
     fontSize: 16,
     marginBottom: 20,
-    color: '#007BFF',
+    color: "#007BFF",
   },
   sectionHeader: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 20,
     marginBottom: 10,
-    color: '#000',
+    color: "#000",
   },
   description: {
     fontSize: 14,
-    color: '#6B7280',
+    color: "#6B7280",
     marginBottom: 10,
   },
   listItem: {
     fontSize: 14,
-    color: '#6B7280',
+    color: "#6B7280",
     marginBottom: 5,
     paddingLeft: 10,
   },
   applyButton: {
     marginTop: 20,
-    backgroundColor: '#007BFF',
+    backgroundColor: "#007BFF",
     paddingVertical: 15,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   applyButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
   },
   submittingButton: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: "#4A90E2",
     opacity: 0.7,
   },
   appliedButton: {
-    backgroundColor: '#6B7280',
+    backgroundColor: "#6B7280",
+  },
+  detailsContainer: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 10,
+  },
+  detailText: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginBottom: 5,
   },
 });
 

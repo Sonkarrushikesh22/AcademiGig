@@ -56,7 +56,9 @@ const JobsList = () => {
     company: job.company,
     jobType: job.jobType,
     salary: {
-      currency: job.salary || 'Salary'
+      currency: job.salary?.currency,
+      min: job.salary?.min,
+      max: job.salary?.max
     },
     description: job.description,
     requirements: Array.isArray(job.requirements) ? job.requirements : [],
