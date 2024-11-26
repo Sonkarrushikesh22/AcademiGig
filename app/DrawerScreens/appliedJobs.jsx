@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, ActivityIndicator, Text, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
-import { Ionicons } from '@expo/vector-icons'; // Icon for back button
+import { View, FlatList, ActivityIndicator, Text, StyleSheet, RefreshControl, TouchableOpacity, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import JobCard from '../../components/CompanyCard/index';
-import { getAppliedJobs, getDownloadPresignedUrl, downloadAndCacheLogo } from '../../api/jobsapi';
+import { 
+  getAppliedJobs, 
+  getDownloadPresignedUrl, 
+  downloadAndCacheLogo,
+  saveJob,
+  unsaveJob,
+  isJobSaved
+} from '../../api/jobsapi';
 
 const AppliedJobs = () => {
   const [appliedJobs, setAppliedJobs] = useState([]);
@@ -11,7 +18,7 @@ const AppliedJobs = () => {
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [logoCache, setLogoCache] = useState({});
-  const navigation = useNavigation(); // Get navigation instance
+  const navigation = useNavigation();
 
   const fetchAppliedJobs = async (isRefreshing = false) => {
     try {
@@ -22,17 +29,22 @@ const AppliedJobs = () => {
 
       const jobs = await getAppliedJobs();
       
-      // Transform the jobs data to match the JobCard component expectations
-      const transformedJobs = jobs.map(application => ({
-        ...application.job,
-        hasApplied: true,
-        isSaved: false, // You might want to check the saved status if needed
-        applicationDate: application.createdAt,
-        applicationStatus: application.status,
-        logoKey: application.job.companyLogoKey,
-      }));
+      // Check saved status for each job
+      const jobsWithSavedStatus = await Promise.all(
+        jobs.map(async (application) => {
+          const isSaved = await isJobSaved(application.job._id);
+          return {
+            ...application.job,
+            hasApplied: true,
+            isSaved: isSaved,
+            applicationDate: application.createdAt,
+            applicationStatus: application.status,
+            logoKey: application.job.companyLogoKey,
+          };
+        })
+      );
 
-      setAppliedJobs(transformedJobs);
+      setAppliedJobs(jobsWithSavedStatus);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -72,6 +84,34 @@ const AppliedJobs = () => {
     }
   };
 
+  const handleSave = async (job) => {
+    try {
+      await saveJob(job._id);
+      setAppliedJobs(prevJobs =>
+        prevJobs.map(j =>
+          j._id === job._id ? { ...j, isSaved: true } : j
+        )
+      );
+    } catch (error) {
+      console.error('Error saving job:', error);
+      Alert.alert('Error', 'Failed to save job');
+    }
+  };
+
+  const handleUnsave = async (job) => {
+    try {
+      await unsaveJob(job._id);
+      setAppliedJobs(prevJobs =>
+        prevJobs.map(j =>
+          j._id === job._id ? { ...j, isSaved: false } : j
+        )
+      );
+    } catch (error) {
+      console.error('Error unsaving job:', error);
+      Alert.alert('Error', 'Failed to unsave job');
+    }
+  };
+
   const handleRefresh = () => {
     setRefreshing(true);
     fetchAppliedJobs(true);
@@ -107,8 +147,8 @@ const AppliedJobs = () => {
           <JobCard
             key={item._id}
             job={item}
-            onSave={() => {}} // Implement if needed
-            onUnsave={() => {}} // Implement if needed
+            onSave={() => handleSave(item)}
+            onUnsave={() => handleUnsave(item)}
             onApply={() => {}} // Already applied, so this is empty
             getLogoUrl={getLogoUrl}
           />
@@ -148,7 +188,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
    marginLeft: -18,
     textAlign: 'center',
-
   },
   centerContainer: {
     flex: 1,
