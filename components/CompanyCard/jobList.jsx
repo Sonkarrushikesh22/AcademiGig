@@ -60,6 +60,16 @@ const JobsList = () => {
       min: job.salary?.min,
       max: job.salary?.max
     },
+    location: {
+      remote:job.location.remote,
+      city: job.location.city,
+      state: job.location.state,
+      country: job.location.country,
+  
+    },
+    skills: job.skills,
+    applicationDeadline : job.applicationDeadline,
+    experienceLevel: job.experienceLevel,
     description: job.description,
     requirements: Array.isArray(job.requirements) ? job.requirements : [],
     responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],

@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   searchContainer: {
-    marginBottom: 20,
+    //marginBottom: 0,
   },
   jobsListContainer: {
     flex: 1,

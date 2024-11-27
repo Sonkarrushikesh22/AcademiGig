@@ -6,14 +6,21 @@ import {
   FlatList, 
   StyleSheet, 
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Alert,
 } from 'react-native';
 import JobCard from '../../components/CompanyCard/index';
-import { getSavedJobs, getDownloadPresignedUrl, unsaveJob, downloadAndCacheLogo } from '../../api/jobsapi';
+import { 
+  getSavedJobs, 
+  getDownloadPresignedUrl, 
+  unsaveJob, 
+  downloadAndCacheLogo,
+  applyToJob,
+  hasAppliedToJob,
+  getAppliedJobs
+} from '../../api/jobsapi';
 
-
-
-const CustomHeader = ({ title, onBack }) => (
+const CustomHeader = ({ title }) => (
   <View style={styles.headerContainer}>
     <Text style={styles.headerTitle}>{title}</Text>
   </View>
@@ -27,6 +34,18 @@ const Saved = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [logoCache, setLogoCache] = useState({});
+  const [appliedJobs, setAppliedJobs] = useState(new Set());
+
+  // Load applied jobs
+  const loadAppliedJobs = useCallback(async () => {
+    try {
+      const applied = await getAppliedJobs();
+      const appliedIds = new Set(applied.map(app => app.job._id));
+      setAppliedJobs(appliedIds);
+    } catch (error) {
+      console.error('Error loading applied jobs:', error);
+    }
+  }, []);
 
   // Transform saved job data to match JobCard component expectations
   const transformJobData = (savedJob) => ({
@@ -39,11 +58,21 @@ const Saved = () => {
       min: savedJob.job.salary?.min,
       max: savedJob.job.salary?.max
     },
+    location: {
+      remote: savedJob.job.location?.remote,
+      city: savedJob.job.location?.city,
+      state: savedJob.job.location?.state,
+      country: savedJob.job.location?.country,
+    },
+    applicationDeadline: savedJob.job.applicationDeadline,
+    skills: savedJob.job.skills,
+    experienceLevel: savedJob.job.experienceLevel,
     description: savedJob.job.description,
     requirements: Array.isArray(savedJob.job.requirements) ? savedJob.job.requirements : [],
     responsibilities: Array.isArray(savedJob.job.responsibilities) ? savedJob.job.responsibilities : [],
     logoKey: savedJob.job.companyLogoKey,
-    isSaved: true
+    isSaved: true,
+    hasApplied: appliedJobs.has(savedJob.job._id)
   });
 
   // Fetch saved jobs
@@ -53,12 +82,22 @@ const Saved = () => {
         setLoading(true);
       }
       setError(null);
-
+  
       const response = await getSavedJobs();
       const transformedJobs = response.map(transformJobData);
       
-      setSavedJobs(transformedJobs);
-      setFilteredJobs(transformedJobs);
+      // Check applied status for each job
+      const appliedStatuses = await Promise.all(
+        transformedJobs.map(job => hasAppliedToJob(job._id))
+      );
+  
+      const jobsWithAppliedStatus = transformedJobs.map((job, index) => ({
+        ...job,
+        hasApplied: appliedStatuses[index]
+      }));
+  
+      setSavedJobs(jobsWithAppliedStatus);
+      setFilteredJobs(jobsWithAppliedStatus);
     } catch (err) {
       setError('Failed to load saved jobs. Please try again.');
       console.error('Error fetching saved jobs:', err);
@@ -72,8 +111,13 @@ const Saved = () => {
 
   // Initial load
   useEffect(() => {
-    fetchSavedJobs();
-  }, [fetchSavedJobs]);
+    const initializeData = async () => {
+      await loadAppliedJobs();
+      await fetchSavedJobs();
+    };
+    
+    initializeData();
+  }, []); 
 
   // Handle search
   const handleSearch = useCallback((text) => {
@@ -123,20 +167,62 @@ const Saved = () => {
       setFilteredJobs(prevJobs => prevJobs.filter(j => j._id !== job._id));
     } catch (error) {
       console.error('Error unsaving job:', error);
+      Alert.alert('Error', 'Failed to unsave job. Please try again.');
     }
   };
 
   // Handle job application
-  const handleApply = (job) => {
-    console.log('Applying to job:', job._id);
-    // Implement your apply logic here
+  const handleApply = async (job) => {
+    try {
+      if (job.hasApplied) {
+        Alert.alert('Already Applied', 'You have already applied to this job.');
+        return;
+      }
+
+      await applyToJob(job._id);
+      
+      // Update both savedJobs and filteredJobs lists
+      const updateJobs = (jobs) => jobs.map(j =>
+        j._id === job._id ? { ...j, hasApplied: true } : j
+      );
+
+      setSavedJobs(updateJobs);
+      setFilteredJobs(updateJobs);
+      setAppliedJobs(prev => new Set([...prev, job._id]));
+
+      Alert.alert(
+        'Application Submitted',
+        'Your job application has been submitted successfully!'
+      );
+    } catch (error) {
+      if (error.message === 'Already applied for this job') {
+        // Update the UI to reflect the actual state
+        const updateJobs = (jobs) => jobs.map(j =>
+          j._id === job._id ? { ...j, hasApplied: true } : j
+        );
+
+        setSavedJobs(updateJobs);
+        setFilteredJobs(updateJobs);
+        setAppliedJobs(prev => new Set([...prev, job._id]));
+        
+        Alert.alert('Already Applied', 'You have already applied to this job.');
+      } else {
+        Alert.alert(
+          'Application Failed',
+          error.message || 'Failed to submit job application. Please try again.'
+        );
+      }
+    }
   };
 
   // Handle refresh
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchSavedJobs(true);
-  }, [fetchSavedJobs]);
+    Promise.all([
+      loadAppliedJobs(),
+      fetchSavedJobs(true)
+    ]);
+  }, [loadAppliedJobs, fetchSavedJobs]);
 
   if (error) {
     return (
@@ -148,7 +234,7 @@ const Saved = () => {
 
   return (
     <View style={styles.container}>
-        <CustomHeader title="Saved"/>
+      <CustomHeader title="Saved"/>
       <TextInput
         style={styles.searchInput}
         placeholder="Search saved jobs"

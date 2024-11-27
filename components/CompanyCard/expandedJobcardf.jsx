@@ -156,14 +156,11 @@ const LargeCard = ({
               <Text style={styles.detailText}>
                 Experience Level: {job.experienceLevel}
               </Text>
-              <Text style={styles.detailText}>Category: {job.category}</Text>
               <Text style={styles.detailText}>
                 Location:{" "}
                 {job.location?.remote
                   ? "Remote"
-                  : `${job.location?.city || "N/A"}, ${
-                      job.location?.state || ""
-                    }, ${job.location?.country || ""}`}
+                  : `${job.location?.city || "N/A"} ${job.location?.state || ""}, ${job.location?.country || ""}`}
               </Text>
               {job.applicationDeadline && (
                 <Text style={styles.detailText}>

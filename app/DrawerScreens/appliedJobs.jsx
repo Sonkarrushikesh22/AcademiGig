@@ -20,6 +20,34 @@ const AppliedJobs = () => {
   const [logoCache, setLogoCache] = useState({});
   const navigation = useNavigation();
 
+  const transformJobData = (application) => ({
+    _id: application.job._id,
+    title: application.job.title,
+    company: application.job.company,
+    jobType: application.job.jobType,
+    salary: {
+      currency: application.job.salary?.currency,
+      min: application.job.salary?.min,
+      max: application.job.salary?.max
+    },
+    location: {
+      remote: application.job.location?.remote,
+      city: application.job.location?.city,
+      state: application.job.location?.state,
+      country: application.job.location?.country,
+    },
+    applicationDeadline: application.job.applicationDeadline,
+    skills: application.job.skills,
+    experienceLevel: application.job.experienceLevel,
+    description: application.job.description,
+    requirements: Array.isArray(application.job.requirements) ? application.job.requirements : [],
+    responsibilities: Array.isArray(application.job.responsibilities) ? application.job.responsibilities : [],
+    logoKey: application.job.companyLogoKey,
+    hasApplied: true,
+    applicationDate: application.createdAt,
+    applicationStatus: application.status
+  });
+
   const fetchAppliedJobs = async (isRefreshing = false) => {
     try {
       if (!isRefreshing) {
@@ -137,7 +165,7 @@ const AppliedJobs = () => {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#000" padding="20" />
         </TouchableOpacity>
         <Text style={styles.header}>Applied Jobs</Text>
       </View>
