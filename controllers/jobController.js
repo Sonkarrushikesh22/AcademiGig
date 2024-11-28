@@ -128,8 +128,65 @@ exports.getDownloadPresignedUrl = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-// const searchJobs = (req, res) => {
 
-// ;}
+
+exports.getJobsByCategory = async (req, res) => {
+  try {
+    const { 
+      category, 
+      page = 1, 
+      limit = 10, 
+      sortBy = 'postedDate', 
+      sortOrder = 'desc' 
+    } = req.query;
+
+    // Validate category is provided
+    if (!category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category is required',
+      });
+    }
+
+    const query = { category };
+
+    const skip = (page - 1) * limit;
+    const sortOptions = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+    // Fetch jobs by category
+    const jobs = await Job.find(query)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(Number(limit));
+
+    // Count total jobs in this category
+    const total = await Job.countDocuments(query);
+
+    // Fetch presigned URLs for logos
+    const jobsWithLogos = await Promise.all(
+      jobs.map(async (job) => {
+        if (job.companyLogoKey) {
+          const presignedUrl = await s3Service.getObjectURL(job.companyLogoKey);
+          return { ...job.toObject(), companyLogoUrl: presignedUrl };
+        }
+        return job.toObject();
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      jobs: jobsWithLogos,
+    });
+  } catch (error) {
+    console.error('Error fetching jobs by category:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch jobs by category.',
+    });
+  }
+};
 
 
