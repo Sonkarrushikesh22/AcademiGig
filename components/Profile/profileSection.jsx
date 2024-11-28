@@ -3,45 +3,31 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 // ProfileSection Component
-const ProfileSection = ({ 
-  title, 
-  children, 
-  editing = false, 
-  onEdit, 
-  onSave 
+const ProfileSection = ({
+  title,
+  children,
+  editing = false,
+  onEdit,
+  onSave,
 }) => {
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          {title}
-        </Text>
+        <Text style={styles.sectionTitle}>{title}</Text>
         {editing ? (
-          <TouchableOpacity 
-            onPress={onSave}
-            style={styles.saveButton}
-          >
+          <TouchableOpacity onPress={onSave} style={styles.saveButton}>
             <Feather name="check" size={16} color="white" style={styles.buttonIcon} />
-            <Text style={styles.saveButtonText}>
-              Save
-            </Text>
+            <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity 
-            onPress={onEdit}
-            style={styles.editButton}
-          >
-            <Feather name="edit-2" size={16} color="#666" style={styles.buttonIcon} />
-            <Text style={styles.editButtonText}>
-              Edit
-            </Text>
+          <TouchableOpacity onPress={onEdit} style={styles.editButton}>
+            <Feather name="edit-2" size={16} color="#4B5563" style={styles.buttonIcon} />
+            <Text style={styles.editButtonText}>Edit</Text>
           </TouchableOpacity>
         )}
       </View>
-      
-      <View style={styles.sectionContent}>
-        {children}
-      </View>
+
+      <View style={styles.sectionContent}>{children}</View>
     </View>
   );
 };
@@ -65,38 +51,28 @@ const CompletionBanner = ({ percentage }) => {
     <View style={styles.bannerContainer}>
       <View style={styles.bannerContent}>
         <View style={styles.bannerHeader}>
-          <Text style={styles.bannerTitle}>
-            Profile Completion
-          </Text>
-          <Text style={styles.percentageText}>
-            {percentage}%
-          </Text>
+          <Text style={styles.bannerTitle}>Profile Completion</Text>
+          <Text style={styles.percentageText}>{percentage}%</Text>
         </View>
-        
+
         <View style={styles.progressBarContainer}>
-          <View 
+          <View
             style={[
               styles.progressBar,
-              { width: `${percentage}%`, backgroundColor: getStatusColor(percentage) }
+              { width: `${percentage}%`, backgroundColor: getStatusColor(percentage) },
             ]}
           />
         </View>
-        
-        <Text style={styles.messageText}>
-          {getMessage(percentage)}
-        </Text>
-        
+
+        <Text style={styles.messageText}>{getMessage(percentage)}</Text>
+
         {percentage < 100 && (
-          <TouchableOpacity 
-            style={styles.completeButton}
-          >
-            <Text style={styles.completeButtonText}>
-              Complete your profile
-            </Text>
-            <Feather name="chevron-right" size={16} color="#3B82F6" />
+          <TouchableOpacity style={styles.completeButton}>
+            <Text style={styles.completeButtonText}>Complete your profile</Text>
+            <Feather name="chevron-right" size={16} color="#1D4ED8" />
           </TouchableOpacity>
         )}
-        </View>
+      </View>
     </View>
   );
 };
@@ -105,26 +81,27 @@ const styles = StyleSheet.create({
   // Section Styles
   sectionContainer: {
     marginBottom: 24,
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: 'hidden',
+    marginHorizontal: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f1f1',
+    backgroundColor: '#EBF5FF',
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
+    fontWeight: '700',
+    color: '#343a40',
   },
   sectionContent: {
     padding: 16,
@@ -132,7 +109,7 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#E5E7EB',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
@@ -140,7 +117,7 @@ const styles = StyleSheet.create({
   saveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#1D4ED8',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
@@ -151,12 +128,12 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
+    color: '#374151',
   },
   saveButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#fff',
+    color: '#FFFFFF',
   },
 
   // Banner Styles
@@ -166,14 +143,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   bannerContent: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   bannerHeader: {
     flexDirection: 'row',
@@ -183,19 +160,20 @@ const styles = StyleSheet.create({
   },
   bannerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
+    fontWeight: '700',
+    color: '#111827',
   },
   percentageText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#3B82F6',
+    color: '#1D4ED8',
   },
   progressBarContainer: {
-    height: 8,
+    height: 10,
     backgroundColor: '#E5E7EB',
-    borderRadius: 4,
+    borderRadius: 5,
     overflow: 'hidden',
+    marginVertical: 8,
   },
   progressBar: {
     height: '100%',
@@ -203,17 +181,22 @@ const styles = StyleSheet.create({
   messageText: {
     marginTop: 8,
     fontSize: 14,
-    color: '#666',
+    fontWeight: '500',
+    color: '#6B7280',
   },
   completeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 12,
+    backgroundColor: '#E0F2FE',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
   },
   completeButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#3B82F6',
+    color: '#1D4ED8',
     marginRight: 4,
   },
 });

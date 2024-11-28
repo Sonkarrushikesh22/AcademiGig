@@ -51,8 +51,8 @@ const Home = () => {
         </View>
 
         {/* Jobs List */}
-        <View style={styles.jobsListContainer}>
-          <JobsList />
+        <View style={styles.jobsListContainer} >
+          <JobsList  />
         </View>
       </View>
     </SafeAreaView>
@@ -67,13 +67,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    marginBottom: -20,
+  marginBottom: -20,
+    
   },
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   logo: {
     fontSize: 25,
@@ -92,6 +93,7 @@ const styles = StyleSheet.create({
   },
   jobsListContainer: {
     flex: 1,
+    marginHorizontal: -5,
   },
 });
 

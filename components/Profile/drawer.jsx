@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import AppliedJobs from '../../app/DrawerScreens/appliedJobs';
+import AppliedJobs from '../../app/(DrawerScreens)/appliedJobs';
 import { TwoPointConicalGradient } from '@shopify/react-native-skia';
 
 const DRAWER_WIDTH = Dimensions.get('window').width * 0.8;
@@ -85,7 +85,7 @@ const CustomDrawer = ({ isOpen, onClose }) => {
       title: 'Applied Jobs',
       icon: 'briefcase-outline',
       onPress: () => {
-        router.push('/DrawerScreens/appliedJobs');
+        router.push('/(DrawerScreens)/appliedJobs');
         onClose();
       }
     }

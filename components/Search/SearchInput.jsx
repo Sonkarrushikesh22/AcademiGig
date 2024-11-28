@@ -7,7 +7,7 @@ import FilterForm from "./SearchFilter";
 const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
   const [showFilterForm, setShowFilterForm] = useState(false);
   const [searchText, setSearchText] = useState('');
-  
+
   const handleApplyFilters = (filters) => {
     if (onApplyFilters) {
       onApplyFilters(filters);
@@ -23,33 +23,31 @@ const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder || "Search..."}
-        placeholderTextColor="gray"
-        onChangeText={setSearchText}
-        value={searchText}
-        onSubmitEditing={handleSearch}
-        returnKeyType="search"
-      />
-      <TouchableOpacity 
-        style={styles.searchIcon} 
-        onPress={handleSearch}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="search" size={20} color="gray" />
-      </TouchableOpacity>
-      <TouchableOpacity 
-        onPress={() => setShowFilterForm(true)}
-        activeOpacity={0.7}
-      >
-        <MaterialCommunityIcons
-          name="tune-variant"
-          size={20}
-          color="black"
-          style={styles.filterIcon}
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder={placeholder || "Search..."}
+          placeholderTextColor="gray"
+          onChangeText={setSearchText}
+          value={searchText}
+          onSubmitEditing={handleSearch}
+          returnKeyType="search"
         />
-      </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.searchIcon} 
+          onPress={handleSearch}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="search" size={20} color="gray" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.filterIcon} 
+          onPress={() => setShowFilterForm(true)}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="tune-variant" size={20} color="black" />
+        </TouchableOpacity>
+      </View>
       <Modal
         visible={showFilterForm}
         animationType="slide"
@@ -71,32 +69,29 @@ const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 10,
+  },
+  inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 10,
-   // marginBottom: -18,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 45,
+    borderWidth: 0.9,
+    borderColor: "black",
+    paddingHorizontal: 10,
+    marginBottom:1
   },
   input: {
     flex: 1,
     height: 50,
-    paddingHorizontal: 10,
-    paddingRight: 40, // Increased to prevent text from going under the search icon
-    backgroundColor: "#f0f0f0",
-    borderRadius: 45,
     fontSize: 16,
     color: "black",
-    borderEndColor: "black",
-    borderWidth: 0.7,
   },
   searchIcon: {
-    position: "absolute",
-    right: 45,
-    top: 15,
-   // padding: 5, // Added padding to increase touch target
-    zIndex: 1, // Ensure the touchable is above the input
+    marginHorizontal: 5,
   },
   filterIcon: {
-    marginLeft: 10,
+    marginHorizontal: 5,
   },
   modalContainer: {
     flex: 1,

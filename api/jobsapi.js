@@ -428,4 +428,52 @@ export const getAppliedJobs = async () => {
       return false;
     }
   };
+
+  /**
+ * Get jobs filtered by a specific category
+ * @param {Object} params
+ * @param {string} params.category - Job category to filter by
+ * @param {number} [params.page=1] - Page number
+ * @param {number} [params.limit=10] - Items per page
+ * @param {string} [params.sortBy='postedDate'] - Field to sort by
+ * @param {string} [params.sortOrder='desc'] - Sort order ('asc' or 'desc')
+ * @returns {Promise<JobsResponse>}
+ */
+  export const getJobsByCategory = async ({
+    category,
+    page = 1,
+    limit = 10,
+    sortBy = 'postedDate',
+    sortOrder = 'desc'
+  } = {}) => {
+    if (!category) {
+      throw new Error('Category is required');
+    }
   
+    try {
+      // Updated to use get-all-jobs with category filter
+      const response = await API.get('/job/get-all-jobs', {
+        params: {
+          category,
+          page,
+          limit,
+          sortBy,
+          sortOrder,
+        }
+      });
+  
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch jobs by category');
+      }
+  
+      return {
+        jobs: response.data.jobs || [],
+        total: response.data.total,
+        page: response.data.page,
+        limit: response.data.limit
+      };
+    } catch (error) {
+      console.error('Error fetching jobs by category:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch jobs by category');
+    }
+  };

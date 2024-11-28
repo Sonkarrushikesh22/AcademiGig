@@ -163,13 +163,7 @@ const AppliedJobs = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#000" padding="20" />
-        </TouchableOpacity>
-        <Text style={styles.header}>Applied Jobs</Text>
-      </View>
-      <FlatList
+      <FlatList  showsVerticalScrollIndicator={false}
         data={appliedJobs}
         renderItem={({ item }) => (
           <JobCard
@@ -202,6 +196,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingHorizontal:15,
+
   },
   headerContainer: {
     flexDirection: 'row',

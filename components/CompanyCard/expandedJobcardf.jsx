@@ -9,10 +9,12 @@ import {
   ScrollView,
   Modal,
   Alert,
+  Animated,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import LogoPlaceholder from "./logoPlaceholder";
 import { BlurView } from "expo-blur";
+import LinearGradient from "react-native-linear-gradient";
 
 const { width, height } = Dimensions.get("window");
 
@@ -27,6 +29,9 @@ const LargeCard = ({
 }) => {
   const [logo, setLogo] = useState({ type: "placeholder" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scale] = useState(new Animated.Value(0));
+  const [opacity] = useState(new Animated.Value(0));
+  const [isAnimating, setIsAnimating] = useState(false); // Internal state
 
   useEffect(() => {
     const loadLogo = async () => {
@@ -38,6 +43,47 @@ const LargeCard = ({
     
     loadLogo();
   }, [job.logoKey, getLogoUrl]);
+
+  useEffect(() => {
+    if (visible) {
+      setIsAnimating(true);
+      Animated.parallel([
+        Animated.spring(scale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 50,
+          friction: 5,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setIsAnimating(false));
+    } else {
+      Animated.parallel([
+        Animated.spring(scale, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 50,
+          friction: 5,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIsAnimating(false); // Animation completed
+
+        onClose();
+      });
+    }
+  }, [visible]);
+
+  if (!visible && !isAnimating) {
+    return null; // Hide Modal completely
+  }
 
   const renderLogo = () => {
     if (logo.type === 'file') {
@@ -95,84 +141,139 @@ const LargeCard = ({
 
   return (
     <Modal
-      visible={visible}
+      visible={visible || isAnimating}
       transparent={true}
-      animationType="fade"
       onRequestClose={onClose}
     >
-      <BlurView intensity={50} style={styles.container} tint="dark">
-        <View style={styles.card}>
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={() => onSave(job)}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      <Animated.View
+        style={[styles.blurContainer, { opacity }]}
+      >
+        <BlurView intensity={200} style={styles.container} tint="dark">
+          <Animated.View
+            style={[styles.card, { transform: [{ scale }], opacity }]}
           >
-            <Feather
-              name={isSaved ? "bookmark" : "bookmark"}
-              size={24}
-              color={isSaved ? "#007BFF" : "#6B7280"}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Feather name="x" size={24} color="#6B7280" />
-          </TouchableOpacity>
-
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.logoContainer}>{renderLogo()}</View>
-
-            <Text style={styles.title}>{job.title}</Text>
-            <Text style={styles.companyName}>{job.company}</Text>
-            <Text style={styles.jobType}>{job.jobType}</Text>
-            <Text style={styles.salary}>
-              {job.salary?.min && job.salary?.max
-                ? ` ${job.salary.min} - ${job.salary.max} ${job.salary.currency}`
-                : "Not specified"}
-            </Text>
-
-            <Text style={styles.sectionHeader}>Description</Text>
-            <Text style={styles.description}>{job.description}</Text>
-
-            <Text style={styles.sectionHeader}>Requirements</Text>
-            {job.requirements?.map((req, index) => (
-              <Text key={index} style={styles.listItem}>{`• ${req}`}</Text>
-            ))}
-
-            <Text style={styles.sectionHeader}>Responsibilities</Text>
-            {job.responsibilities?.map((resp, index) => (
-              <Text key={index} style={styles.listItem}>{`• ${resp}`}</Text>
-            ))}
-            <Text style={styles.sectionHeader}>Skills</Text>
-            {job.skills?.map((skill, index) => (
-              <Text key={index} style={styles.listItem}>{`• ${skill}`}</Text>
-            ))}
-
-            <Text style={styles.sectionHeader}>Additional Details</Text>
-            <View style={styles.detailsContainer}>
-              <Text style={styles.detailText}>
-                Experience Level: {job.experienceLevel}
-              </Text>
-              <Text style={styles.detailText}>
-                Location:{" "}
-                {job.location?.remote
-                  ? "Remote"
-                  : `${job.location?.city || "N/A"} ${job.location?.state || ""}, ${job.location?.country || ""}`}
-              </Text>
-              {job.applicationDeadline && (
-                <Text style={styles.detailText}>
-                  Application Deadline:{" "}
-                  {new Date(job.applicationDeadline).toLocaleDateString()}
-                </Text>
-              )}
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>{renderLogo()}</View>
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={() => onSave(job)}
+                >
+                  <View style={[styles.iconButton, isSaved && styles.iconButtonActive]}>
+                    <Feather
+                      name={isSaved ? "bookmark" : "bookmark"}
+                      size={20}
+                      color={isSaved ? "#2563EB" : "#6B7280"}
+                    />
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={onClose}
+                >
+                  <View style={styles.iconButton}>
+                    <Feather name="x" size={20} color="#6B7280" />
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
-          </ScrollView>
-          {renderApplyButton()}
-        </View>
-      </BlurView>
+
+            <ScrollView 
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.content}
+            >
+              <View style={styles.titleSection}>
+                <Text style={styles.title}>{job.title}</Text>
+                <Text style={styles.companyName}>{job.company}</Text>
+                <View style={styles.tagContainer}>
+                  <View style={styles.tag}>
+                    <Feather name="briefcase" size={14} color="#6B7280" />
+                    <Text style={styles.tagText}>{job.jobType}</Text>
+                  </View>
+                  {job.salary?.min && job.salary?.max && (
+                    <View style={styles.tag}>
+                      <Feather name="dollar-sign" size={14} color="#6B7280" />
+                      <Text style={styles.tagText}>
+                        {`${job.salary.min} - ${job.salary.max} ${job.salary.currency}`}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionHeader}>Description</Text>
+                <Text style={styles.description}>{job.description}</Text>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionHeader}>Requirements</Text>
+                {job.requirements?.map((req, index) => (
+                  <View key={index} style={styles.bulletPoint}>
+                    <View style={styles.bullet} />
+                    <Text style={styles.bulletText}>{req}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionHeader}>Skills</Text>
+                <View style={styles.skillsContainer}>
+                  {job.skills.map(skill => (
+                    <View key={skill} style={styles.skillChip}>
+                      <Text style={styles.skillChipText}>{skill}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionHeader}>Additional Details</Text>
+                <View style={styles.detailsCard}>
+                  <View style={styles.detailRow}>
+                    <Feather name="user" size={16} color="#6B7280" />
+                    <Text style={styles.detailText}>
+                      Experience: {job.experienceLevel}
+                    </Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Feather name="map-pin" size={16} color="#6B7280" />
+                    <Text style={styles.detailText}>
+                      {job.location?.remote
+                        ? "Remote"
+                        : `${job.location?.city || "N/A"} ${job.location?.state || ""}`}
+                    </Text>
+                  </View>
+                  {job.applicationDeadline && (
+                    <View style={styles.detailRow}>
+                      <Feather name="calendar" size={16} color="#6B7280" />
+                      <Text style={styles.detailText}>
+                        Deadline: {new Date(job.applicationDeadline).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={[
+                  styles.applyButton,
+                  job.hasApplied && styles.appliedButton,
+                  isSubmitting && styles.submittingButton
+                ]}
+                onPress={handleApply}
+                disabled={job.hasApplied || isSubmitting}
+              >
+                <Text style={styles.applyButtonText}>
+                  {job.hasApplied ? "Applied" : isSubmitting ? "Submitting..." : "Apply Now"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </BlurView>
+      </Animated.View>
     </Modal>
   );
 };
@@ -182,112 +283,173 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  blurContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
   },
   card: {
     width: width * 0.9,
-    maxHeight: height * 0.8,
+    maxHeight: height * 0.85,
     backgroundColor: "#fff",
-    borderRadius: 20,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     padding: 20,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
   },
-  saveButton: {
-    position: "absolute",
-    top: 15,
-    right: 50,
-    zIndex: 10,
-    padding: 5,
+  headerActions: {
+    flexDirection: "row",
+    gap: 8,
   },
-  closeButton: {
-    position: "absolute",
-    top: 15,
-    right: 15,
-    zIndex: 10,
-    padding: 5,
+  iconButton: {
+    backgroundColor: "#F3F4F6",
+    padding: 8,
+    borderRadius: 12,
+  },
+  iconButtonActive: {
+    backgroundColor: "#EBF5FF",
   },
   logoContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
+    marginRight: 16,
   },
   logoLarge: {
-    width: 100,
-    height: 100,
-    borderRadius: 15,
+    width: 90,
+    height: 90,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  content: {
+    padding: 20,
+  },
+  titleSection: {
+    marginBottom: 24,
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
-    color: "#000",
+    color: "#111827",
+    marginBottom: 8,
   },
   companyName: {
     fontSize: 16,
-    marginBottom: 10,
+    color: "#4B5563",
+    marginBottom: 16,
+  },
+  tagContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  tag: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    gap: 6,
+  },
+  tagText: {
+    fontSize: 14,
     color: "#6B7280",
   },
-  jobType: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: "#6B7280",
-  },
-  salary: {
-    fontSize: 16,
-    marginBottom: 20,
-    color: "#007BFF",
+  section: {
+    marginBottom: 24,
   },
   sectionHeader: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 20,
-    marginBottom: 10,
-    color: "#000",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: 12,
   },
   description: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 10,
+    fontSize: 15,
+    lineHeight: 24,
+    color: "#4B5563",
   },
-  listItem: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 5,
-    paddingLeft: 10,
+  bulletPoint: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
   },
-  applyButton: {
-    marginTop: 20,
-    backgroundColor: "#007BFF",
-    paddingVertical: 15,
-    borderRadius: 10,
+  bullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#2563EB",
+    marginTop: 8,
+    marginRight: 12,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 24,
+    color: "#4B5563",
+  },
+  skillsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  skillChip: {
+    backgroundColor: "#EBF5FF",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  skillChipText: {
+    fontSize: 14,
+    color: "#2563EB",
+    fontWeight: "500",
+  },
+  detailsCard: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+  },
+  detailRow: {
+    flexDirection: "row",
     alignItems: "center",
-  },
-  applyButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  submittingButton: {
-    backgroundColor: "#4A90E2",
-    opacity: 0.7,
-  },
-  appliedButton: {
-    backgroundColor: "#6B7280",
-  },
-  detailsContainer: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 10,
-    padding: 15,
-    marginTop: 10,
+    gap: 12,
   },
   detailText: {
     fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 5,
+    color: "#4B5563",
+  },
+  footer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  applyButton: {
+    backgroundColor: "#2563EB",
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  appliedButton: {
+    backgroundColor: "#9CA3AF",
+  },
+  submittingButton: {
+    backgroundColor: "#60A5FA",
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

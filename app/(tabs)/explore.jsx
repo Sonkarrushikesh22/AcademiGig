@@ -7,11 +7,101 @@ import {
   ScrollView,
 } from "react-native";
 import React from "react";
+import { useRouter } from "expo-router";
 import SearchInput from "../../components/Search/SearchInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
+
+const CATEGORY_MAPPING = {
+  'Retail': { key: 'retail', icon: '🛍️' },
+  'Customer Service': { key: 'customer-service', icon: '🎯' },
+  'Food Service': { key: 'food-service', icon: '🍽️' },
+  'Education': { key: 'education', icon: '📚' },
+  'Tutoring': { key: 'tutoring', icon: '📖' },
+  'Healthcare': { key: 'healthcare', icon: '🩺' },
+  'Wellness': { key: 'wellness', icon: '❤️' },
+  'Administrative Support': { key: 'administrative', icon: '💼' },
+  'Creative': { key: 'creative', icon: '🎨' },
+  'Design': { key: 'design', icon: '✏️' },
+  'Technology': { key: 'technology', icon: '💻' },
+  'IT': { key: 'it', icon: '🖥️' },
+  'Transportation': { key: 'transportation', icon: '🚚' },
+  'Delivery': { key: 'delivery', icon: '📦' },
+  'Marketing': { key: 'marketing', icon: '📊' },
+  'Sales': { key: 'sales', icon: '💰' },
+  'Finance': { key: 'finance', icon: '💵' },
+  'Accounting': { key: 'accounting', icon: '📈' }
+};
+const Explore = () => {
+  const router = useRouter();
+  const categories = Object.entries(CATEGORY_MAPPING).map(([title, { key, icon }], index) => ({
+    id: index.toString(),
+    title,
+    key,
+    icon,
+  
+  }));
+
+  const handleSearch = (text) => {
+    console.log("Search:", text);
+  };
+
+  const handleApplyFilters = (filters) => {
+    console.log('Applied filters:', filters);
+  };
+
+  const renderCategoryItem = ({ item }) => (
+    <TouchableOpacity
+      style={Styles.categoryItem}
+      onPress={() => handleCategoryPress(item)}
+    >
+      <Text style={{ fontSize: 24 }}>{item.icon}</Text>
+      <Text style={Styles.categoryTitle}>{item.title}</Text>
+      <Text style={Styles.categoryCount}>{item.count} jobs</Text>
+    </TouchableOpacity>
+  )
+
+  const handleCategoryPress = (category) => {
+    router.push({
+      pathname: `/(explore)/${category.key}`,
+      params: { 
+        category: category.title,
+        categoryKey: category.key
+      }
+    });
+  };
+
+  return (
+    <SafeAreaView style={Styles.container}>
+      <View style={Styles.body}>
+        <SearchInput
+          placeholder="Search for jobs..."
+          onSearch={handleSearch}
+        />
+        <ScrollView 
+          contentContainerStyle={{ flexGrow: 1 }} 
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={Styles.categoriesContainer}>
+            <Text style={Styles.sectionTitle}>Categories</Text>
+            <FlatList
+              data={categories}
+              renderItem={renderCategoryItem}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              columnWrapperStyle={{ justifyContent: 'space-between' }}
+              scrollEnabled={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            />
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
+  );
+
+};
 const Styles = {
   container: {
     flex: 1,
@@ -22,6 +112,7 @@ const Styles = {
   },
   categoriesContainer: {
     paddingVertical: 20,
+    paddingBottom: 130,
   },
   categoryItem: {
     width: (width - 60) / 2,
@@ -32,6 +123,12 @@ const Styles = {
     justifyContent: "center",
     alignItems: "center",
     padding: 10,
+    borderRadius: 20,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
   categoryTitle: {
     fontSize: 16,
@@ -51,77 +148,4 @@ const Styles = {
     marginLeft: 20,
   },
 };
-
-const Explore = () => {
-  const sampleCategories = [
-    { id: "1", title: "Restaurant", count: 25, icon: "🍽️" },
-    { id: "2", title: "Retail", count: 18, icon: "🛍️" },
-    { id: "3", title: "Office Work", count: 15, icon: "💼" },
-    { id: "4", title: "Delivery", count: 22, icon: "🚚" },
-    { id: "5", title: "Customer Service", count: 20, icon: "🎯" },
-    { id: "6", title: "Education", count: 12, icon: "📚" },
-    { id: "7", title: "Event Staffing", count: 10, icon: "🎉" },
-    { id: "8", title: "Freelance Writing", count: 8, icon: "✍️" },
-    { id: "9", title: "Tutoring", count: 14, icon: "📖" },
-    { id: "10", title: "Healthcare Assistant", count: 6, icon: "🩺" },
-    { id: "11", title: "Warehouse", count: 16, icon: "🏭" },
-    { id: "12", title: "Cleaning Services", count: 11, icon: "🧹" },
-    { id: "13", title: "Pet Care", count: 5, icon: "🐾" },
-    { id: "14", title: "IT Support", count: 9, icon: "💻" },
-  ];
-
-  const [categories, setCategories] = React.useState(sampleCategories);
-
-  const handleSearch = (text) => {
-    console.log("Search:", text);
-  };
-
-  const handleApplyFilters = (filters) => {
-    console.log('Applied filters:', filters);
-  };
-
-  const renderCategoryItem = ({ item }) => (
-    <TouchableOpacity
-      style={Styles.categoryItem}
-      onPress={() => handleCategoryPress(item)}
-    >
-      <Text style={{ fontSize: 24 }}>{item.icon}</Text>
-      <Text style={Styles.categoryTitle}>{item.title}</Text>
-      <Text style={Styles.categoryCount}>{item.count} jobs</Text>
-    </TouchableOpacity>
-  );
-
-  const handleCategoryPress = (category) => {
-    console.log("Category pressed:", category.title);
-  };
-
-  return (
-    <SafeAreaView style={Styles.container}>
-     
-        <View style={Styles.body}>
-          <SearchInput
-            placeholder="Search for jobs..."
-            onSearch={handleSearch}
-            onFilter={handleApplyFilters}
-          />
- <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
-          <View style={Styles.categoriesContainer}>
-            <Text style={Styles.sectionTitle}>Categories</Text>
-            <FlatList
-              data={categories}
-              renderItem={renderCategoryItem}
-              keyExtractor={(item) => item.id}
-              numColumns={2}
-              columnWrapperStyle={{ justifyContent: 'space-between' }}
-              scrollEnabled={false} // If wrapping with ScrollView
-              contentContainerStyle={{ paddingBottom: 20 }}
-            />
-          </View>
-          </ScrollView>
-        </View>
-      
-    </SafeAreaView>
-  );
-};
-
 export default Explore;

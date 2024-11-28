@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import LogoPlaceholder from './logoPlaceholder';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Pressable,
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import LogoPlaceholder from "./logoPlaceholder";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const SmallCard = ({ job, onSave, getLogoUrl, onPress, isSaved }) => {
-  const [logo, setLogo] = useState({ type: 'placeholder' });
+  const [logo, setLogo] = useState({ type: "placeholder" });
 
   useEffect(() => {
     const loadLogo = async () => {
@@ -15,12 +23,12 @@ const SmallCard = ({ job, onSave, getLogoUrl, onPress, isSaved }) => {
         setLogo(result);
       }
     };
-    
+
     loadLogo();
   }, [job.logoKey, getLogoUrl]);
 
   const renderLogo = () => {
-    if (logo.type === 'file') {
+    if (logo.type === "file") {
       return (
         <Image
           source={{ uri: `file://${logo.path}` }}
@@ -29,94 +37,132 @@ const SmallCard = ({ job, onSave, getLogoUrl, onPress, isSaved }) => {
         />
       );
     }
-    return <LogoPlaceholder size={50} />;
+    return <LogoPlaceholder size={60} />;
   };
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      <TouchableOpacity 
-        style={styles.saveButton} 
-        onPress={() => onSave(job)}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <Feather 
-          name={isSaved ? "bookmark" : "bookmark"} 
-          size={20} 
-          color={isSaved ? "#007BFF" : "#6B7280"} 
-        />
-      </TouchableOpacity>
+    <Pressable 
+      onPress={onPress} 
+      style={styles.card}
+      android_ripple={{ color: "rgba(0,123,255,0.1)" }}
+    >
+      <View style={styles.mainContainer}>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={() => onSave(job)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <View style={[styles.bookmarkContainer, isSaved && styles.bookmarkContainerActive]}>
+            <Feather
+              name="bookmark"
+              size={20}
+              color={isSaved ? "#007BFF" : "#6B7280"}
+            />
+          </View>
+        </TouchableOpacity>
 
-      <View style={styles.logoContainer}>
-        {renderLogo()}
-      </View>
+        <View style={styles.logoContainer}>{renderLogo()}</View>
 
-      <View style={styles.infoContainer}>
-        <Text style={styles.title}>{job.title}</Text>
-        <Text style={styles.companyName}>{job.company}</Text>
-        <Text style={styles.jobType}>{job.jobType}</Text>
-        <Text style={styles.salary}>
-  {job.salary?.min && job.salary?.max 
-    ? `${job.salary.min} - ${job.salary.max} ${job.salary.currency} ` 
-    : 'Not specified'}
-</Text>
+        <View style={styles.infoContainer}>
+          <Text numberOfLines={1} style={styles.title}>{job.title}</Text>
+          <Text numberOfLines={1} style={styles.companyName}>{job.company}</Text>
+          
+          <View style={styles.tagContainer}>
+            <View style={styles.tag}>
+              <Feather name="briefcase" size={14} color="#6B7280" style={styles.tagIcon} />
+              <Text style={styles.tagText}>{job.jobType}</Text>
+            </View>
+            
+            <View style={styles.tag}>
+              <Feather name="dollar-sign" size={14} color="#6B7280" style={styles.tagIcon} />
+              <Text style={styles.salary}>
+                {job.salary?.min && job.salary?.max
+                  ? `${job.salary.min} - ${job.salary.max} ${job.salary.currency}`
+                  : "Not specified"}
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
+    position: "relative",
     marginVertical: 8,
     marginHorizontal: width * 0.05,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  mainContainer: {
+    padding: 16,
   },
   saveButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
+    position: "absolute",
+    top: 12,
+    right: 12,
     zIndex: 10,
-    padding: 5,
+  },
+  bookmarkContainer: {
+    backgroundColor: "#F3F4F6",
+    padding: 8,
+    borderRadius: 8,
+  },
+  bookmarkContainerActive: {
+    backgroundColor: "#EBF5FF",
   },
   logoContainer: {
-    marginRight: 15,
+    marginBottom: 12,
   },
   logoSmall: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 12,
   },
   infoContainer: {
     flex: 1,
   },
   title: {
-    fontWeight: 'bold',
-    fontSize: 16,
+    fontWeight: "700",
+    fontSize: 18,
     marginBottom: 4,
-    color: '#000',
+    color: "#1F2937",
   },
   companyName: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 4,
+    fontSize: 15,
+    color: "#6B7280",
+    marginBottom: 12,
   },
-  jobType: {
+  tagContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  tag: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  tagIcon: {
+    marginRight: 4,
+  },
+  tagText: {
     fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 4,
+    color: "#6B7280",
   },
   salary: {
     fontSize: 14,
-    color: '#007BFF',
+    color: "#6B7280",
   },
 });
 

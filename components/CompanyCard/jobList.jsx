@@ -261,7 +261,7 @@ const JobsList = () => {
   }
 
   return (
-    <FlatList
+    <FlatList  showsVerticalScrollIndicator={false}
       data={jobs}
       renderItem={({ item }) => (
         <JobCard
@@ -300,7 +300,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+   // paddingBottom: 150,
+  
   },
   emptyList: {
     flex: 1,

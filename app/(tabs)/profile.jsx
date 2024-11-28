@@ -309,19 +309,10 @@ return (
 const styles = StyleSheet.create({
 mainContainer: {
   flex: 1,
-  backgroundColor: '#f5f5f5',
 },
 headerContainer: {
-  //backgroundColor: '#ffffff',
   marginTop: 20,
   padding: 16,
-  // borderBottomWidth: 1,
-  // borderBottomColor: '#e0e0e0',
-  // elevation: 2, // Android shadow
-  // shadowColor: '#000000', // iOS shadow
-  // shadowOffset: { width: 0, height: 2 },
-  // shadowOpacity: 0.1,
-  // shadowRadius: 4,
 },
 scrollContainer: {
   flex: 1,
@@ -342,9 +333,7 @@ headerText: {
 menuButton: {
   padding: 4,
 },
-scrollContainer: {
-  flex: 1,
-},
+
 });
 
 export default UserProfileScreen;

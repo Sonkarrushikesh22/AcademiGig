@@ -323,6 +323,7 @@ export const ResumeUploadForm = ({ data, editing, onChange }) => {
   );
 };
 
+
 const styles = StyleSheet.create({
   input: {
     backgroundColor: '#f8f8f8',
@@ -417,61 +418,65 @@ const styles = StyleSheet.create({
   },
   experiencePeriod: {
     fontSize: 14,
-    color: '#666',
+    color: '#999',
   },
   experienceDescription: {
+    marginTop: 4,
     fontSize: 14,
-    color: '#444',
+    color: '#555',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
     marginTop: 8,
-    lineHeight: 20,
   },
   experienceForm: {
-    backgroundColor: '#f8f8f8',
+    marginBottom: 16,
+    backgroundColor: '#f9f9f9',
     borderRadius: 8,
     padding: 12,
-    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   experienceFormHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   experienceFormTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
   },
   removeExperienceButton: {
     padding: 8,
   },
-  emptyText: {
-    color: '#999',
-    fontSize: 16,
-    fontStyle: 'italic',
-  },
-  resumeContainer: {
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
+  uploadedFile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f9f9f9',
     padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  resumeInfo: {
+  fileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  resumeText: {
-    fontSize: 16,
-    color: '#333',
+  fileName: {
     marginLeft: 12,
+    fontSize: 14,
+    color: '#333',
   },
   uploadButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#f0f0f0',
     padding: 12,
     borderRadius: 8,
-    justifyContent: 'center',
-    marginBottom: 8,
   },
   uploadButtonText: {
     color: '#007AFF',
@@ -479,42 +484,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  uploadedFile: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  fileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  fileName: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 12,
-    flex: 1,
-  },
-  removeButton: {
-    padding: 8,
+  helpText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 8,
+    textAlign: 'center',
   },
   errorText: {
+    fontSize: 12,
     color: '#FF3B30',
-    fontSize: 14,
-    marginBottom: 8,
+    textAlign: 'center',
+    marginTop: 8,
   },
-  helpText: {
-    color: '#666',
-    fontSize: 14,
-    fontStyle: 'italic',
+  resumeContainer: {
+    marginBottom: 16,
+    paddingBottom: 8,
   },
-  emptyText: {
-    color: '#999',
-    fontSize: 16,
-    fontStyle: 'italic',
+  resumeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  resumeText: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 8,
   },
 });

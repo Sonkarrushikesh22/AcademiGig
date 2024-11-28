@@ -235,18 +235,12 @@ const Saved = () => {
   return (
     <View style={styles.container}>
       <CustomHeader title="Saved"/>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search saved jobs"
-        value={searchQuery}
-        onChangeText={handleSearch}
-        placeholderTextColor="#6B7280"
-      />
+
 
       {loading && !refreshing ? (
         <ActivityIndicator style={styles.loader} size="large" color="#007BFF" />
       ) : (
-        <FlatList
+        <FlatList  showsVerticalScrollIndicator={false}
           data={filteredJobs}
           renderItem={({ item }) => (
             <JobCard
@@ -284,10 +278,9 @@ const Saved = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    paddingHorizontal:15,
   },
   headerContainer: {
-
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
