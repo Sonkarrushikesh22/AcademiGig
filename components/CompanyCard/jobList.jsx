@@ -290,7 +290,10 @@ const JobsList = () => {
           </View>
         ) : null
       }
-      contentContainerStyle={jobs.length === 0 ? styles.emptyList : null}
+      contentContainerStyle={{
+        ...(jobs.length === 0 ? styles.emptyList : {}),
+        paddingBottom: 95, // Always add padding
+      }}
     />
   );
 };
@@ -300,13 +303,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-   // paddingBottom: 150,
   
   },
   emptyList: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+
   },
   errorText: {
     color: 'red',

@@ -236,6 +236,9 @@ const JobsByCategory = () => {
                 No jobs found in this category
               </Text>
             }
+            contentContainerStyle={{
+              paddingBottom: 95, 
+            }}
           />
         )}
       </View>

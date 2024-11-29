@@ -12,6 +12,7 @@ const RootLayout = () => {
     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     <Stack.Screen name="(explore)" options={{ headerShown: false }} />
     <Stack.Screen name="(DrawerScreens)" options={{ headerShown: false }} />
+    <Stack.Screen name="search" options={{ headerShown: false }} />
   </Stack>
   )
 }

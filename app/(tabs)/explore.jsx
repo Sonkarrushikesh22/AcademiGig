@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import React from "react";
 import { useRouter } from "expo-router";
-import SearchInput from "../../components/Search/SearchInput";
+import SearchInput from "../../components/SearchComponent/SearchInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");

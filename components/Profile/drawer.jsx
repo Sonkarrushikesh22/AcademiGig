@@ -211,6 +211,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
+    marginBottom: 85,
   },
   logoutButton: {
     paddingVertical: 12,

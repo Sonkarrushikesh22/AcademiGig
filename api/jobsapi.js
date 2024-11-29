@@ -1,6 +1,7 @@
 import axios from 'axios';
 import API from './api';
 import * as FileSystem from 'expo-file-system';
+import * as yup from 'yup';
 
 /**
  * @typedef {Object} JobLocation
@@ -477,3 +478,116 @@ export const getAppliedJobs = async () => {
       throw new Error(error.response?.data?.message || 'Failed to fetch jobs by category');
     }
   };
+
+
+  
+/**
+ * @typedef {Object} FilterParams
+ * @property {string} [search] - Search term for title, description, and company
+ * @property {string} [category] - Job category
+ * @property {string} [jobType] - Type of job
+ * @property {string} [experienceLevel] - Required experience level
+ * @property {number} [minSalary] - Minimum salary
+ * @property {number} [maxSalary] - Maximum salary
+ * @property {string} [currency] - Salary currency
+ * @property {string} [city] - City location
+ * @property {string} [state] - State location
+ * @property {string} [country] - Country location
+ * @property {boolean} [isRemote] - Remote work option
+ * @property {string} [postedAfter] - Jobs posted after date
+ * @property {string} [postedBefore] - Jobs posted before date
+ * @property {string|string[]} [skills] - Required skills
+ * @property {number} [page=1] - Page number
+ * @property {number} [limit=10] - Items per page
+ * @property {string} [sortBy='postedDate'] - Field to sort by
+ * @property {string} [sortOrder='desc'] - Sort order ('asc' or 'desc')
+ */
+
+/**
+ * Validation schema for filter parameters
+ */
+const filterSchema = yup.object().shape({
+  search: yup.string(),
+  category: yup.string(),
+  jobType: yup.string(),
+  experienceLevel: yup.string(),
+  minSalary: yup.number().min(0),
+  maxSalary: yup.number().min(0),
+  currency: yup.string(),
+  city: yup.string(),
+  state: yup.string(),
+  country: yup.string(),
+  isRemote: yup.boolean(),
+  postedAfter: yup.date(),
+  postedBefore: yup.date(),
+  skills: yup.lazy((value) =>
+    Array.isArray(value) ? yup.array().of(yup.string()) : yup.string()
+  ),
+  page: yup.number().min(1).default(1),
+  limit: yup.number().min(1).default(10),
+  sortBy: yup.string().default('postedDate'),
+  sortOrder: yup.string().oneOf(['asc', 'desc']).default('desc'),
+});
+
+/**
+ * Filter jobs with advanced filtering options
+ * @param {FilterParams} params - Filter parameters
+ * @returns {Promise<Object>} - Filtered jobs and metadata
+ */
+export const filterJobs = async (params = {}) => {
+  try {
+    // Validate and sanitize parameters
+    const validatedParams = await filterSchema.validate(params, {
+      stripUnknown: true, // Remove unexpected fields
+    });
+
+    // Convert skills array to string if needed
+    if (Array.isArray(validatedParams.skills)) {
+      validatedParams.skills = validatedParams.skills.join(',');
+    }
+
+    // API call
+    const response = await API.get('/job/filter-jobs', {
+      params: validatedParams,
+    });
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to filter jobs');
+    }
+
+    return {
+      jobs: response.data.jobs || [],
+      total: response.data.total,
+      page: response.data.page,
+      limit: response.data.limit,
+      totalPages: response.data.totalPages,
+    };
+  } catch (error) {
+    console.error('Error filtering jobs:', error);
+    throw new Error(
+      error.response?.data?.message || 'Failed to filter jobs'
+    );
+  }
+};
+
+/**
+ * Fetch available filter options (e.g., categories, job types, experience levels)
+ * @returns {Promise<Object>} - Available filter options
+ */
+export const getFilterOptions = async () => {
+  try {
+    // Separate endpoint for filter options
+    const response = await API.get('/job/filter-options');
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to fetch filter options');
+    }
+
+    return response.data.options;
+  } catch (error) {
+    console.error('Error fetching filter options:', error);
+    throw new Error(
+      error.response?.data?.message || 'Failed to fetch filter options'
+    );
+  }
+};

@@ -5,7 +5,7 @@ import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { TouchableOpacity } from "react-native";
 import { useRouter } from 'expo-router';
-import SearchInput from "../../components/Search/SearchInput";
+import SearchInput from "../../components/SearchComponent/SearchInput";
 import JobsList from "../../components/CompanyCard/jobList";
 
 const Home = () => {
@@ -62,13 +62,12 @@ const Home = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    //backgroundColor: '#F5F5F5',
   },
   container: {
     flex: 1,
     padding: 20,
   marginBottom: -20,
-    
   },
   headerContainer: {
     flexDirection: "row",

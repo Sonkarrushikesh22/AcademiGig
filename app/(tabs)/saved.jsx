@@ -269,6 +269,9 @@ const Saved = () => {
               </Text>
             </View>
           }
+          contentContainerStyle={{
+            paddingBottom: 95, // Always add padding
+          }}
         />
       )}
     </View>
@@ -292,13 +295,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000',
   },
-  searchInput: {
-    height: 40,
-    margin: 16,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
-    color: '#000',
+  emptyList: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+
   },
   centerContainer: {
     flex: 1,

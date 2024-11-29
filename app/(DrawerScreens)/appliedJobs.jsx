@@ -187,6 +187,9 @@ const AppliedJobs = () => {
             <Text style={styles.emptyText}>No applied jobs found</Text>
           </View>
         }
+        contentContainerStyle={{
+          paddingBottom: 95, // Always add padding
+        }}
       />
     </View>
   );

@@ -205,7 +205,11 @@ return (
     </View>
 
     {/* Scrollable Content */}
-    <ScrollView style={styles.scrollContainer}>
+    <ScrollView style={styles.scrollContainer}
+   contentContainerStyle={[
+    { paddingBottom: 80 }, // Add consistent padding to the bottom
+  ]}
+    >
       <CompletionBanner percentage={calculateProfileCompletion()} />
       
       <ProfileHeader
