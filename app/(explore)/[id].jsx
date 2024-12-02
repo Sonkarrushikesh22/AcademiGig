@@ -109,18 +109,22 @@ const JobsByCategory = () => {
         page,
         limit: 10,
       });
-
-      // Check saved status for each job
+  
+      // Check saved and applied status for each job
       const jobsWithStatus = await Promise.all(
         result.jobs.map(async (job) => {
-          const isSaved = await isJobSaved(job._id);
+          const [isSaved, hasApplied] = await Promise.all([
+            isJobSaved(job._id),
+            hasAppliedToJob(job._id)
+          ]);
           return {
             ...transformJobData(job),
-            isSaved
+            isSaved,
+            hasApplied
           };
         })
       );
-
+  
       setJobs(prevJobs => 
         page === 1 ? jobsWithStatus : [...prevJobs, ...jobsWithStatus]
       );
@@ -160,6 +164,27 @@ const JobsByCategory = () => {
       Alert.alert('Error', 'Failed to unsave job');
     }
   };
+
+  const loadAppliedJobs = useCallback(async () => {
+    try {
+      const applied = await getAppliedJobs();
+      setAppliedJobs(new Set(applied.map(app => app.job._id)));
+    } catch (error) {
+      console.error('Error loading applied jobs:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (categoryKey) {
+      const initializeData = async () => {
+        await loadAppliedJobs();
+        await loadSavedAndAppliedJobs();
+        fetchJobsByCategory();
+      };
+      
+      initializeData();
+    }
+  }, [categoryKey]);
 
   const handleApply = async (job) => {
     try {

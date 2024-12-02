@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import SearchInput from "../../components/SearchComponent/SearchInput";
 import JobsList from "../../components/CompanyCard/jobList";
 
+
 const Home = () => {
   const router = useRouter();
 

@@ -6,13 +6,22 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   ActivityIndicator,
-  SafeAreaView
+  SafeAreaView,
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { filterJobs } from '../../api/jobsapi';
+import { 
+  filterJobs,
+  saveJob,
+  unsaveJob,
+  isJobSaved,
+  applyToJob,
+  hasAppliedToJob,
+  getDownloadPresignedUrl, 
+  downloadAndCacheLogo 
+} from '../../api/jobsapi';
 import JobCard from '../../components/CompanyCard/index';
-import SearchInput from '../../components/SearchComponent/SearchInput';
 import { useLocalSearchParams } from 'expo-router';
 
 const JobsSearchPage = () => {
@@ -26,80 +35,13 @@ const JobsSearchPage = () => {
   const [activeFilters, setActiveFilters] = useState({});
   const [totalResults, setTotalResults] = useState(0);
   const route = useLocalSearchParams();
+  const [logoCache, setLogoCache] = useState({});
 
-  const handleSearchResults = useCallback(async (filters = {}) => {
-    try {
-      setIsLoading(true);
-      
-      // Don't destructure the filters - keep them intact
-      console.log('Received filters:', filters);
-
-      // Update search query if changed
-      if (filters.search !== searchQuery) {
-        setSearchQuery(filters.search || '');
-      }
-
-      // Keep track of active filters
-      setActiveFilters(filters);
-
-      console.log('Sending filters to API:', filters);
-
-      // Pass the filters directly to filterJobs
-      const results = await filterJobs(filters);
-  
-      setJobs(results.jobs || []);
-      setTotalPages(results.totalPages || 0);
-      setPage(1);
-      setTotalResults(results.totalJobs || 0);
-    } catch (err) {
-      console.error('Search error:', err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchQuery]);
-
-
-
-
-  const loadMoreJobs = async () => {
-    if (isLoading || page >= totalPages) return;
-
-    try {
-      setIsLoading(true);
-      
-      console.log('Loading more jobs with:', {
-        ...activeFilters,
-        search: searchQuery,
-        page: page + 1,
-        limit: 10
-      });
-
-      const results = await filterJobs({
-        ...activeFilters,
-        search: searchQuery,
-        page: page + 1,
-        limit: 10
-      });
-
-      setJobs(prevJobs => [...prevJobs, ...(results.jobs || [])]);
-      setPage(results.page || page + 1);
-    } catch (err) {
-      console.error('Load more error:', err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
-  
   useEffect(() => {
     const fetchInitialJobs = async () => {
       try {
         setIsLoading(true);
         
-        // Convert URL params to filters
         const initialFilters = {};
         Object.entries(route || {}).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
@@ -107,7 +49,6 @@ const JobsSearchPage = () => {
           }
         });
   
-        // Only fetch if there are actual filters and they're different from current active filters
         const filtersChanged = Object.keys(initialFilters).some(
           key => initialFilters[key] !== activeFilters[key]
         );
@@ -115,7 +56,17 @@ const JobsSearchPage = () => {
         if (filtersChanged) {
           const results = await filterJobs(initialFilters);
       
-          setJobs(results.jobs || []);
+          const jobsWithStatus = await Promise.all(
+            (results.jobs || []).map(async (job) => {
+              const [isSaved, hasApplied] = await Promise.all([
+                isJobSaved(job._id),
+                hasAppliedToJob(job._id)
+              ]);
+              return { ...job, isSaved, hasApplied };
+            })
+          );
+
+          setJobs(jobsWithStatus);
           setTotalPages(results.totalPages || 0);
           setPage(results.currentPage || 1);
           setTotalResults(results.totalJobs || 0);
@@ -132,29 +83,176 @@ const JobsSearchPage = () => {
     fetchInitialJobs();
   }, [route, JSON.stringify(activeFilters)]);
 
+  const handleSearchResults = useCallback(async (filters = {}) => {
+    try {
+      setIsLoading(true);
+      console.log('Received filters:', filters);
+
+      if (filters.search !== searchQuery) {
+        setSearchQuery(filters.search || '');
+      }
+
+      setActiveFilters(filters);
+      const results = await filterJobs(filters);
+      
+      const jobsWithStatus = await Promise.all(
+        (results.jobs || []).map(async (job) => {
+          const [isSaved, hasApplied] = await Promise.all([
+            isJobSaved(job._id),
+            hasAppliedToJob(job._id)
+          ]);
+          return { ...job, isSaved, hasApplied };
+        })
+      );
+  
+      setJobs(jobsWithStatus);
+      setTotalPages(results.totalPages || 0);
+      setPage(1);
+      setTotalResults(results.totalJobs || 0);
+    } catch (err) {
+      console.error('Search error:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery]);
+
+  const loadMoreJobs = async () => {
+    if (isLoading || page >= totalPages) return;
+
+    try {
+      setIsLoading(true);
+      const results = await filterJobs({
+        ...activeFilters,
+        search: searchQuery,
+        page: page + 1,
+        limit: 10
+      });
+
+      const newJobsWithStatus = await Promise.all(
+        (results.jobs || []).map(async (job) => {
+          const [isSaved, hasApplied] = await Promise.all([
+            isJobSaved(job._id),
+            hasAppliedToJob(job._id)
+          ]);
+          return { ...job, isSaved, hasApplied };
+        })
+      );
+
+      setJobs(prevJobs => [...prevJobs, ...newJobsWithStatus]);
+      setPage(results.page || page + 1);
+    } catch (err) {
+      console.error('Load more error:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async (job) => {
+    try {
+      await saveJob(job._id);
+      setJobs(prevJobs =>
+        prevJobs.map(j =>
+          j._id === job._id ? { ...j, isSaved: true } : j
+        )
+      );
+    } catch (error) {
+      console.error('Error saving job:', error);
+      Alert.alert('Error', 'Failed to save job');
+    }
+  };
+
+  const handleUnsave = async (job) => {
+    try {
+      await unsaveJob(job._id);
+      setJobs(prevJobs =>
+        prevJobs.map(j =>
+          j._id === job._id ? { ...j, isSaved: false } : j
+        )
+      );
+    } catch (error) {
+      console.error('Error unsaving job:', error);
+      Alert.alert('Error', 'Failed to unsave job');
+    }
+  };
+
+  const handleApply = async (job) => {
+    try {
+      if (job.hasApplied) {
+        Alert.alert('Already Applied', 'You have already applied to this job.');
+        return;
+      }
+
+      await applyToJob(job._id);
+      
+      setJobs(prevJobs =>
+        prevJobs.map(j =>
+          j._id === job._id ? { ...j, hasApplied: true } : j
+        )
+      );
+
+      Alert.alert(
+        'Application Submitted',
+        'Your job application has been submitted successfully!'
+      );
+    } catch (error) {
+      if (error.message === 'Already applied for this job') {
+        setJobs(prevJobs =>
+          prevJobs.map(j =>
+            j._id === job._id ? { ...j, hasApplied: true } : j
+          )
+        );
+        Alert.alert('Already Applied', 'You have already applied to this job.');
+      } else {
+        Alert.alert(
+          'Application Failed',
+          error.message || 'Failed to submit job application. Please try again.'
+        );
+      }
+    }
+  };
+
+  const getLogoUrl = useCallback(async (logoKey) => {
+    if (!logoKey) return { type: 'placeholder' };
+    
+    try {
+      if (logoCache[logoKey]) {
+        return { type: 'file', path: logoCache[logoKey] };
+      }
+  
+      const presignedUrl = await getDownloadPresignedUrl(logoKey, 'job-logo');
+      const result = await downloadAndCacheLogo(presignedUrl, logoKey);
+      
+      if (result.type === 'file') {
+        setLogoCache(prev => ({
+          ...prev,
+          [logoKey]: result.path
+        }));
+      }
+  
+      return result;
+    } catch (error) {
+      console.warn('Error getting logo URL:', error);
+      return { type: 'placeholder' };
+    }
+  }, [logoCache]);
+
   const renderJobItem = ({ item }) => (
     <JobCard 
-      job={item}
-      onPress={() => router.push(`/job/${item.id}`)}
-      onSave={() => {/* Implement save functionality */}}
-      onUnsave={() => {/* Implement unsave functionality */}}
-      onApply={() => router.push(`/job/${item.id}/apply`)}
+      job={
+        {
+          ...item,
+          logoKey: item.companyLogoKey // Add this line
+        }
+      }
+      onPress={() => router.push(`/job/${item._id}`)}
+      onSave={() => handleSave(item)}
+      onUnsave={() => handleUnsave(item)}
+      onApply={() => handleApply(item)}
+      getLogoUrl={getLogoUrl}
     />
   );
-
-  // const renderHeader = () => (
-  //   <View style={styles.headerContent}>
-  //     <SearchInput 
-  //       initialSearch={searchQuery}
-  //       onSearchResults={handleSearchResults}
-  //     />
-  //     {totalResults > 0 && (
-  //       <Text style={styles.resultsCount}>
-  //         {totalResults} job{totalResults !== 1 ? 's' : ''} found
-  //       </Text>
-  //     )}
-  //   </View>
-  // );
 
   const renderFooter = () => {
     if (!isLoading) return null;
@@ -188,29 +286,6 @@ const JobsSearchPage = () => {
         <Text style={styles.errorText}>Error: {error}</Text>
         <TouchableOpacity 
           style={styles.retryButton} 
-          onPress={() => handleSearchResults([])}
-        >
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  const handleRetry = () => {
-    handleSearchResults({
-      ...activeFilters,
-      search: searchQuery
-    });
-  };
-
-  // In your error view:
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <MaterialIcons name="error-outline" size={48} color="red" />
-        <Text style={styles.errorText}>Error: {error}</Text>
-        <TouchableOpacity 
-          style={styles.retryButton} 
           onPress={handleRetry}
         >
           <Text style={styles.retryButtonText}>Retry</Text>
@@ -218,17 +293,17 @@ const JobsSearchPage = () => {
       </View>
     );
   }
+
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
         data={jobs}
         renderItem={renderJobItem}
         keyExtractor={(item, index) => 
-          item.id?.toString() || `job-${index}-${item.title || 'unknown'}`
+          item._id?.toString() || `job-${index}-${item.title || 'unknown'}`
         }
         onEndReached={loadMoreJobs}
         onEndReachedThreshold={0.5}
-     //   ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={[

@@ -120,18 +120,18 @@ const Saved = () => {
   }, []); 
 
   // Handle search
-  const handleSearch = useCallback((text) => {
-    setSearchQuery(text);
-    if (text) {
-      const filtered = savedJobs.filter((job) =>
-        job.title.toLowerCase().includes(text.toLowerCase()) ||
-        job.company.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredJobs(filtered);
-    } else {
-      setFilteredJobs(savedJobs);
-    }
-  }, [savedJobs]);
+  // const handleSearch = useCallback((text) => {
+  //   setSearchQuery(text);
+  //   if (text) {
+  //     const filtered = savedJobs.filter((job) =>
+  //       job.title.toLowerCase().includes(text.toLowerCase()) ||
+  //       job.company.toLowerCase().includes(text.toLowerCase())
+  //     );
+  //     setFilteredJobs(filtered);
+  //   } else {
+  //     setFilteredJobs(savedJobs);
+  //   }
+  // }, [savedJobs]);
 
   // Handle logo URL caching
   const getLogoUrl = useCallback(async (logoKey) => {
