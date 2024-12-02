@@ -1,5 +1,7 @@
 const Job = require('../models/Job');
 const s3Service = require('../services/fileUploadService');
+const mongoose = require('mongoose');
+
 
 exports.getAllJobs = async (req, res) => {
   try {
@@ -12,10 +14,16 @@ exports.getAllJobs = async (req, res) => {
 
     // Search functionality
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
+      // Use text search instead of regex
+      query.$text = { 
+        $search: search 
+      };
+      
+      // Add text score sorting when search is used
+      sortOptions = {
+        score: { $meta: "textScore" },
+        ...sortOptions
+      };
     }
 
     // Filtering by category, job type, and experience level
@@ -189,4 +197,283 @@ exports.getJobsByCategory = async (req, res) => {
   }
 };
 
+//job filter
 
+exports.filterJobs = async (req, res) => {
+  try {
+    console.log('Received Raw Filter Parameters:', req.query);
+
+    const {
+      search,
+      page = 1,
+      limit = 10,
+      sortBy = 'postedDate',
+      sortOrder = 'desc',
+      category,
+      jobType,
+      experienceLevel,
+      minSalary,
+      maxSalary,
+      currency,
+      city,
+      state,
+      country,
+      isRemote,
+      postedAfter,
+      postedBefore,
+      skills,
+    } = req.query;
+
+    // Input validation with strict type checking
+    const pageNumber = Math.max(1, parseInt(page));
+    const limitNumber = Math.max(1, parseInt(limit));
+    
+    if (isNaN(pageNumber) || isNaN(limitNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pagination parameters'
+      });
+    }
+
+    // Strict validation for sort parameters
+    const allowedSortFields = ['postedDate', 'salary.min', 'title', 'company'];
+    if (sortBy && !allowedSortFields.includes(sortBy)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid sortBy parameter'
+      });
+    }
+
+    if (sortOrder && !['asc', 'desc'].includes(sortOrder.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid sortOrder parameter'
+      });
+    }
+
+    // Initialize base query
+    const query = {};
+
+    // Text search with validation
+    if (search && typeof search === 'string' && search.trim()) {
+      // Using text index for search
+      query.$text = { $search: search.trim() };
+    }
+
+    // Category validation
+    if (category && typeof category === 'string') {
+      query.category = category.trim();
+    }
+
+    // JobType validation - using enum values
+    if (jobType && typeof jobType === 'string') {
+      const validJobTypes = ['Full-time', 'Part-time', 'Contract', 'Temporary', 'Internship'];
+      if (validJobTypes.includes(jobType)) {
+        query.jobType = jobType;
+      }
+    }
+
+    // ExperienceLevel validation - using enum values
+    if (experienceLevel && typeof experienceLevel === 'string') {
+      const validExperienceLevels = ['Entry', 'Mid', 'Senior'];
+      if (validExperienceLevels.includes(experienceLevel)) {
+        query.experienceLevel = experienceLevel;
+      }
+    }
+
+    // Salary Range filtering - adjusted for nested structure
+    const parsedMinSalary = parseFloat(minSalary);
+    const parsedMaxSalary = parseFloat(maxSalary);
+    
+    if (!isNaN(parsedMinSalary) || !isNaN(parsedMaxSalary)) {
+      if (!isNaN(parsedMinSalary) && !isNaN(parsedMaxSalary)) {
+        // Both min and max provided
+        query.$and = [
+          { 'salary.min': { $lte: parsedMaxSalary } },
+          { 'salary.max': { $gte: parsedMinSalary } }
+        ];
+      } else if (!isNaN(parsedMinSalary)) {
+        // Only min salary provided
+        query['salary.min'] = { $gte: parsedMinSalary };
+      } else if (!isNaN(parsedMaxSalary)) {
+        // Only max salary provided
+        query['salary.max'] = { $lte: parsedMaxSalary };
+      }
+    }
+
+    // Currency filtering
+    if (currency && typeof currency === 'string') {
+      query['salary.currency'] = currency.toUpperCase();
+    }
+
+    // Location filtering with validation
+    if (city || state || country || isRemote) {
+      const locationQuery = {};
+      
+      if (city && typeof city === 'string') {
+        locationQuery['location.city'] = new RegExp(city.trim(), 'i');
+      }
+      
+      if (state && typeof state === 'string') {
+        locationQuery['location.state'] = new RegExp(state.trim(), 'i');
+      }
+      
+      if (country && typeof country === 'string') {
+        locationQuery['location.country'] = new RegExp(country.trim(), 'i');
+      }
+      
+      if (isRemote) {
+        locationQuery['location.remote'] = String(isRemote).toLowerCase() === 'true';
+      }
+      
+      Object.assign(query, locationQuery);
+    }
+
+    // Skills filtering with validation
+    if (skills) {
+      let skillsArray = [];
+      if (Array.isArray(skills)) {
+        skillsArray = skills.filter(skill => typeof skill === 'string' && skill.trim());
+      } else if (typeof skills === 'string') {
+        skillsArray = skills.split(',')
+          .map(skill => skill.trim())
+          .filter(skill => skill);
+      }
+
+      if (skillsArray.length > 0) {
+        query.skills = { $all: skillsArray };
+      }
+    }
+
+    // Date filtering with strict validation
+    if (postedAfter || postedBefore) {
+      query.postedDate = {};
+      
+      if (postedAfter) {
+        const afterDate = new Date(postedAfter);
+        if (!isNaN(afterDate.getTime())) {
+          query.postedDate.$gte = afterDate;
+        }
+      }
+      
+      if (postedBefore) {
+        const beforeDate = new Date(postedBefore);
+        if (!isNaN(beforeDate.getTime())) {
+          query.postedDate.$lte = beforeDate;
+        }
+      }
+      
+      if (Object.keys(query.postedDate).length === 0) {
+        delete query.postedDate;
+      }
+    }
+
+    // Debug logging
+    console.log('Final Query:', JSON.stringify(query, null, 2));
+
+    // Sorting - adjusted for nested salary field
+    const sortOptions = {};
+    if (sortBy === 'salary.min') {
+      sortOptions['salary.min'] = sortOrder === 'asc' ? 1 : -1;
+    } else {
+      sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    }
+
+    // Pagination
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Execute query with aggregation pipeline
+    const pipeline = [
+      { $match: query },
+      { $sort: sortOptions },
+      { $skip: skip },
+      { $limit: limitNumber },
+      {
+        $project: {
+          title: 1,
+          company: 1,
+          description: 1,
+          requirements: 1,
+          responsibilities: 1,
+          salary: 1,
+          location: 1,
+          jobType: 1,
+          category: 1,
+          postedDate: 1,
+          applicationDeadline: 1,
+          skills: 1,
+          experienceLevel: 1,
+          employers: 1,
+          companyLogoKey: 1
+        }
+      }
+    ];
+
+    // Execute query and count in parallel
+    const [jobs, totalCount] = await Promise.all([
+      Job.aggregate(pipeline),
+      Job.countDocuments(query)
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limitNumber);
+
+    // Return response with metadata
+    return res.status(200).json({
+      success: true,
+      total: totalCount,
+      page: pageNumber,
+      limit: limitNumber,
+      totalPages,
+      hasNextPage: pageNumber < totalPages,
+      hasPreviousPage: pageNumber > 1,
+      jobs: jobs || []
+    });
+
+  } catch (error) {
+    console.error('Job Filtering Error:', {
+      message: error.message,
+      stack: error.stack,
+      query: req.query
+    });
+
+    return res.status(500).json({
+      success: false,
+      message: process.env.NODE_ENV === 'development' 
+        ? `Error filtering jobs: ${error.message}`
+        : 'An unexpected error occurred while filtering jobs'
+    });
+  }
+};
+
+// Enhanced Filter Options Endpoint
+exports.getFilterOptions = async (req, res) => {
+  try {
+    const [categories, jobTypes, experienceLevels, currencies, countries] = await Promise.all([
+      Job.distinct('category'),
+      Job.distinct('jobType'),
+      Job.distinct('experienceLevel'),
+      Job.distinct('salary.currency'),
+      Job.distinct('location.country')
+    ]);
+
+    // Cache the response for 1 hour since these don't change frequently
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.status(200).json({
+      success: true,
+      options: {
+        categories: categories.filter(Boolean).sort(),
+        jobTypes: jobTypes.filter(Boolean).sort(),
+        experienceLevels: experienceLevels.filter(Boolean).sort(),
+        currencies: currencies.filter(Boolean).sort(),
+        countries: countries.filter(Boolean).sort()
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching filter options:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch filter options',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};

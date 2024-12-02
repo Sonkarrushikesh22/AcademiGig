@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
+// Define the Job Schema
 const JobSchema = new Schema({
   title: {
     type: String,
@@ -51,4 +52,33 @@ const JobSchema = new Schema({
   companyLogoKey: String,
 });
 
-module.exports = mongoose.model('Job', JobSchema);
+// Add a Text Index to the Schema
+JobSchema.index(
+  {
+    title: 'text',
+    company: 'text',
+    description: 'text',
+  },
+  {
+    weights: {
+      title: 10,       // Title matches are most important
+      company: 5,      // Company matches are second most important
+      description: 1,  // Description matches have standard weight
+    },
+    name: 'JobSearchIndex', // Give the index a name for easier management
+  }
+);
+
+// Create the Job Model
+const Job = mongoose.model('Job', JobSchema);
+
+// Ensure Index Creation
+Job.createIndexes()
+  .then(() => {
+    console.log('Job search indexes created successfully');
+  })
+  .catch((err) => {
+    console.error('Error creating job search indexes:', err);
+  });
+
+module.exports = Job;
