@@ -481,103 +481,255 @@ export const getAppliedJobs = async () => {
 
 
   
-/**
- * @typedef {Object} FilterParams
- * @property {string} [search] - Search term for title, description, and company
- * @property {string} [category] - Job category
- * @property {string} [jobType] - Type of job
- * @property {string} [experienceLevel] - Required experience level
- * @property {number} [minSalary] - Minimum salary
- * @property {number} [maxSalary] - Maximum salary
- * @property {string} [currency] - Salary currency
- * @property {string} [city] - City location
- * @property {string} [state] - State location
- * @property {string} [country] - Country location
- * @property {boolean} [isRemote] - Remote work option
- * @property {string} [postedAfter] - Jobs posted after date
- * @property {string} [postedBefore] - Jobs posted before date
- * @property {string|string[]} [skills] - Required skills
- * @property {number} [page=1] - Page number
- * @property {number} [limit=10] - Items per page
- * @property {string} [sortBy='postedDate'] - Field to sort by
- * @property {string} [sortOrder='desc'] - Sort order ('asc' or 'desc')
- */
 
-/**
- * Validation schema for filter parameters
- */
-const filterSchema = yup.object().shape({
-  search: yup.string(),
-  category: yup.string(),
-  jobType: yup.string(),
-  experienceLevel: yup.string(),
-  minSalary: yup.number().min(0),
-  maxSalary: yup.number().min(0),
-  currency: yup.string(),
-  city: yup.string(),
-  state: yup.string(),
-  country: yup.string(),
-  isRemote: yup.boolean(),
-  postedAfter: yup.date(),
-  postedBefore: yup.date(),
-  skills: yup.lazy((value) =>
-    Array.isArray(value) ? yup.array().of(yup.string()) : yup.string()
-  ),
-  page: yup.number().min(1).default(1),
-  limit: yup.number().min(1).default(10),
-  sortBy: yup.string().default('postedDate'),
-  sortOrder: yup.string().oneOf(['asc', 'desc']).default('desc'),
-});
 
-/**
- * Filter jobs with advanced filtering options
- * @param {FilterParams} params - Filter parameters
- * @returns {Promise<Object>} - Filtered jobs and metadata
- */
-export const filterJobs = async (params = {}) => {
-  try {
-    // Validate and sanitize parameters
-    const validatedParams = await filterSchema.validate(params, {
-      stripUnknown: true, // Remove unexpected fields
-    });
+  // const VALID_SORT_FIELDS = ['postedDate', 'salary.min', 'title', 'company'];
+  // const VALID_JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Temporary', 'Internship'];
+  // const VALID_EXPERIENCE_LEVELS = ['Entry', 'Mid', 'Senior'];
+  // const DEFAULT_PAGE_SIZE = 10;
+  
+  // /**
+  //  * Validates and sanitizes filter parameters
+  //  */
+  // const validateFilterParams = (params) => {
+  //   const sanitized = { ...params };
+  
+  //   if (sanitized.search) {
+  //     sanitized.search = sanitized.search.trim();
+  //   }
 
-    // Convert skills array to string if needed
-    if (Array.isArray(validatedParams.skills)) {
-      validatedParams.skills = validatedParams.skills.join(',');
-    }
+  //   // Validate sortBy
+  //   if (sanitized.sortBy && !VALID_SORT_FIELDS.includes(sanitized.sortBy)) {
+  //     throw new Error(`Invalid sortBy parameter. Must be one of: ${VALID_SORT_FIELDS.join(', ')}`);
+  //   }
+  
+  //   // Validate sortOrder
+  //   if (sanitized.sortOrder && !['asc', 'desc'].includes(sanitized.sortOrder.toLowerCase())) {
+  //     throw new Error('Invalid sortOrder parameter. Must be either "asc" or "desc"');
+  //   }
+  
+  //   // Validate jobType
+  //   if (sanitized.jobType && !VALID_JOB_TYPES.includes(sanitized.jobType)) {
+  //     throw new Error(`Invalid jobType parameter. Must be one of: ${VALID_JOB_TYPES.join(', ')}`);
+  //   }
+  
+  //   // Validate experienceLevel
+  //   if (sanitized.experienceLevel && !VALID_EXPERIENCE_LEVELS.includes(sanitized.experienceLevel)) {
+  //     throw new Error(`Invalid experienceLevel parameter. Must be one of: ${VALID_EXPERIENCE_LEVELS.join(', ')}`);
+  //   }
+  
+  //   // Validate salary values
+  //   if (sanitized.minSalary !== undefined) {
+  //     const minSalary = Number(sanitized.minSalary);
+  //     if (isNaN(minSalary) || minSalary < 0) {
+  //       throw new Error('Invalid minSalary parameter. Must be a positive number');
+  //     }
+  //     sanitized.minSalary = minSalary;
+  //   }
+  
+  //   if (sanitized.maxSalary !== undefined) {
+  //     const maxSalary = Number(sanitized.maxSalary);
+  //     if (isNaN(maxSalary) || maxSalary < 0) {
+  //       throw new Error('Invalid maxSalary parameter. Must be a positive number');
+  //     }
+  //     sanitized.maxSalary = maxSalary;
+  //   }
+  
+  //   // Validate dates
+  //   if (sanitized.postedAfter) {
+  //     const afterDate = new Date(sanitized.postedAfter);
+  //     if (isNaN(afterDate.getTime())) {
+  //       throw new Error('Invalid postedAfter date format');
+  //     }
+  //     sanitized.postedAfter = afterDate.toISOString();
+  //   }
+  
+  //   if (sanitized.postedBefore) {
+  //     const beforeDate = new Date(sanitized.postedBefore);
+  //     if (isNaN(beforeDate.getTime())) {
+  //       throw new Error('Invalid postedBefore date format');
+  //     }
+  //     sanitized.postedBefore = beforeDate.toISOString();
+  //   }
+  
+  //   // Validate pagination
+  //   sanitized.page = Math.max(1, parseInt(sanitized.page) || 1);
+  //   sanitized.limit = Math.max(1, parseInt(sanitized.limit) || DEFAULT_PAGE_SIZE);
+  
+  //   // Handle skills array
+  //   if (sanitized.skills) {
+  //     if (Array.isArray(sanitized.skills)) {
+  //       sanitized.skills = sanitized.skills
+  //         .filter(skill => typeof skill === 'string' && skill.trim())
+  //         .join(',');
+  //     } else if (typeof sanitized.skills === 'string') {
+  //       sanitized.skills = sanitized.skills.trim();
+  //     }
+  //   }
+  
+  //   // Remove empty values
+  //   Object.keys(sanitized).forEach(key => {
+  //     if (sanitized[key] === '' || sanitized[key] === undefined || sanitized[key] === null) {
+  //       delete sanitized[key];
+  //     }
+  //   });
+    
+  //   if (sanitized.search === '') {
+  //     delete sanitized.search;
+  //   }
 
-    // API call
-    const response = await API.get('/job/filter-jobs', {
-      params: validatedParams,
-    });
-
-    if (!response.data.success) {
-      throw new Error(response.data.message || 'Failed to filter jobs');
-    }
-
-    return {
-      jobs: response.data.jobs || [],
-      total: response.data.total,
-      page: response.data.page,
-      limit: response.data.limit,
-      totalPages: response.data.totalPages,
+  //   return sanitized;
+  // };
+  const validateFilterParams = (params) => {
+    const {
+      search,
+      category,
+      jobType,
+      experienceLevel,
+      minSalary,
+      maxSalary,
+      currency,
+      city,
+      state,
+      country,
+      isRemote,
+      skills,
+      page = 1,
+      limit = 10,
+      sortBy = 'postedDate',
+      sortOrder = 'desc',
+      ...rest
+    } = params;
+  
+    // Create base validated params
+    const validatedParams = {
+      page: Number(page),
+      limit: Number(limit),
+      sortBy,
+      sortOrder
     };
-  } catch (error) {
-    console.error('Error filtering jobs:', error);
-    throw new Error(
-      error.response?.data?.message || 'Failed to filter jobs'
-    );
-  }
-};
+  
+    // Add optional parameters only if they exist and are valid
+    if (search) validatedParams.search = search;
+    if (category && category !== 'all') validatedParams.category = category;
+    if (jobType && jobType !== 'all') validatedParams.jobType = jobType;
+    if (experienceLevel && experienceLevel !== 'all') validatedParams.experienceLevel = experienceLevel;
+    if (minSalary && minSalary !== 0) validatedParams.minSalary = Number(minSalary);
+    if (maxSalary && maxSalary !== 200000) validatedParams.maxSalary = Number(maxSalary);
+    if (currency) validatedParams.currency = currency;
+    if (city) validatedParams.city = city;
+    if (state) validatedParams.state = state;
+    if (country) validatedParams.country = country;
+    if (typeof isRemote === 'boolean' || isRemote === 'true' || isRemote === 'false') {
+      validatedParams.isRemote = typeof isRemote === 'boolean' ? isRemote : isRemote === 'true';
+    }
+    if (Array.isArray(skills) && skills.length > 0) validatedParams.skills = skills;
+  
+    console.log('Validated params:', validatedParams);
+    return validatedParams;
+  };
+  /**
+   * Filter jobs with advanced filtering options
+   */
+  export const filterJobs = async (params = {}) => {
+    try {
+      console.log('Raw params received in filterJobs:', params);
+      
+      // Validate and sanitize parameters
+      const validatedParams = validateFilterParams(params);
+      console.log('Validated params in filterJobs:', validatedParams);
+  
+      // Use validatedParams directly in API call
+      const response = await makeRequestWithRetry(() => 
+        API.get('/job/filter-jobs', {
+          params: validatedParams,
+          paramsSerializer: {
+            serialize: (params) => {
+              const searchParams = new URLSearchParams();
+              
+              Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                  searchParams.append(key, value.toString());
+                }
+              });
+  
+              if (params.postedAfter || params.postedBefore) {
+                searchParams.append('_t', Date.now().toString());
+              }
+              
+              const serialized = searchParams.toString();
+              console.log('Final serialized params:', serialized);
+              return serialized;
+            }
+          }
+        })
+      );
+  
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || 'Failed to filter jobs');
+      }
+  
+      const {
+        jobs = [],
+        total = 0,
+        page = 1,
+        limit = DEFAULT_PAGE_SIZE,
+        totalPages = 1,
+        hasNextPage = false,
+        hasPreviousPage = false
+      } = response.data;
+  
+      return {
+        jobs,
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+        isEmpty: jobs.length === 0,
+        isFirstPage: page === 1,
+        isLastPage: page === totalPages,
+        currentRange: {
+          start: ((page - 1) * limit) + 1,
+          end: Math.min(page * limit, total)
+        }
+      };
+  
+    } catch (error) {
+      console.error('Job filtering error:', {
+        message: error.response?.data?.message || error.message,
+        code: error.response?.status,
+        params: params
+      });
+  
+      if (error.response?.status === 400) {
+        throw new Error(`Invalid filter parameters: ${error.response.data.message}`);
+      } else if (error.response?.status === 401) {
+        throw new Error('Authentication required to filter jobs');
+      } else if (error.response?.status === 403) {
+        throw new Error('Not authorized to filter jobs');
+      } else if (error.response?.status >= 500) {
+        throw new Error('Server error while filtering jobs. Please try again later.');
+      } else {
+        throw new Error(error.message || 'Failed to filter jobs');
+      }
+    }
+  };
+  
+  // Helper function to validate and sanitize filter parameters
+
+  
 
 /**
- * Fetch available filter options (e.g., categories, job types, experience levels)
- * @returns {Promise<Object>} - Available filter options
+ * Fetch available filter options
+ * @returns {Promise<Object>} Available filter options
  */
 export const getFilterOptions = async () => {
   try {
-    // Separate endpoint for filter options
-    const response = await API.get('/job/filter-options');
+    const response = await makeRequestWithRetry(() => 
+      API.get('/job/filter-options')
+    );
 
     if (!response.data.success) {
       throw new Error(response.data.message || 'Failed to fetch filter options');
@@ -590,4 +742,39 @@ export const getFilterOptions = async () => {
       error.response?.data?.message || 'Failed to fetch filter options'
     );
   }
+};
+
+/**
+ * Helper function to make API requests with retry logic
+ */
+const makeRequestWithRetry = async (requestFn, maxRetries = 3) => {
+  let lastError;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await requestFn();
+    } catch (error) {
+      lastError = error;
+      // Don't retry if it's a client error (4xx)
+      if (error.response?.status < 500) break;
+      // Wait before retrying, with exponential backoff
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      }
+    }
+  }
+  
+  throw lastError;
+};
+
+/**
+ * Create a debounced version of the filter function
+ */
+export const createDebouncedFilter = (callback, delay = 300) => {
+  let timeoutId;
+  
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => callback(...args), delay);
+  };
 };

@@ -6,8 +6,9 @@ import { StatusBar } from "expo-status-bar";
 const SearchLayout = () => {
   return (
     <Stack >
-      <Stack.Screen name="filter" />
-      <Stack.Screen name="index" />
+      <Stack.Screen name="index" 
+      options={{title: 'Search Results'}}
+      />
     </Stack>
   )
 }

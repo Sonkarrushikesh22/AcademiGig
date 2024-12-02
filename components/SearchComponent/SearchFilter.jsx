@@ -6,14 +6,15 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  ActivityIndicator,
+  ActivityIndicator
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getFilterOptions, getJobsByCategory } from '../../api/jobsapi';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const defaultFilterOptions = {
     categories: [
       'Technology', 'Healthcare', 'Finance', 'Education', 'Marketing',
@@ -25,6 +26,7 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
     ],
     experienceLevels: ['Entry', 'Mid', 'Senior']
   };
+
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -77,33 +79,42 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
   }, [fetchFilterOptions]);
 
   const handleApplyFilters = async () => {
-    // Transform filters to match API parameters
-      const apiFilters = {
-        ...filters,
-        category: filters.category === 'all' ? undefined : filters.category,
-        jobType: filters.jobType === 'all' ? undefined : filters.jobType,
-        experienceLevel: filters.experienceLevel === 'all' ? undefined : filters.experienceLevel,
-        minSalary: filters.minSalary || undefined,
-        maxSalary: filters.maxSalary || undefined,
-        currency: filters.currency,
-        city: filters.city || undefined,
-        state: filters.state || undefined,
-        country: filters.country || undefined,
-        isRemote: filters.isRemote || undefined,
-        skills: filters.skills.length > 0 ? filters.skills.join(',') : undefined,
-      };
-
-      const queryParams = new URLSearchParams();
-  Object.entries(apiFilters).forEach(([key, value]) => {
-    if (value !== undefined) {
-      queryParams.append(key, value);
+    try {
+      // Create clean filters object removing empty/default values
+      const cleanFilters = Object.entries(filters).reduce((acc, [key, value]) => {
+        if (
+          value !== 'all' && 
+          value !== '' && 
+          value !== undefined && 
+          value !== null &&
+          !(Array.isArray(value) && value.length === 0)
+        ) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+  
+      // Ensure these parameters are always included
+      cleanFilters.page = 1;
+      cleanFilters.limit = 10;
+      
+      // Add search parameter if exists
+      if (params.search) {
+        cleanFilters.search = params.search;
+      }
+  
+      console.log('Applying filters:', cleanFilters);
+  
+      if (onApplyFilters) {
+        onApplyFilters(cleanFilters);
+      }
+  
+      onClose();
+    } catch (error) {
+      console.error('Error applying filters:', error);
     }
-  });
-
-  router.push(`/filtered?${queryParams.toString()}`);
-  onClose();
-};
-
+  };
+  
   const resetFilters = () => {
     setFilters({
       category: 'all',
@@ -206,6 +217,7 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
     );
   }
 
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>

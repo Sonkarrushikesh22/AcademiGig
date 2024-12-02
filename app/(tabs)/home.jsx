@@ -11,12 +11,26 @@ import JobsList from "../../components/CompanyCard/jobList";
 const Home = () => {
   const router = useRouter();
 
-  const handleSearch = (text) => {
-    console.log("Search:", text);
-  };
-
-  const handleFilter = () => {
-    console.log("Filter icon clicked");
+  const handleSearch = (filters) => {
+    const queryParams = new URLSearchParams();
+    
+    // Ensure default parameters are always included
+    const completeFilters = {
+      page: 1,
+      limit: 10,
+      sortBy: 'postedDate',
+      sortOrder: 'desc',
+      ...filters
+    };
+  
+    Object.entries(completeFilters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value.toString());
+      }
+    });
+  
+    // Navigate to the search results page with the filters
+    router.push(`/search?${queryParams.toString()}`);
   };
 
   return (
@@ -45,9 +59,8 @@ const Home = () => {
         <View style={styles.searchContainer}>
           <SearchInput
             placeholder="Search for jobs..."
-            onSearch={handleSearch}
-            onFilter={handleFilter}
-          />
+            onSearchResults={handleSearch}
+            showFilterButton={true}/>
         </View>
 
         {/* Jobs List */}

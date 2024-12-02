@@ -1,32 +1,121 @@
-import React, { useState } from "react";
-import { View, TextInput, StyleSheet, Modal, TouchableOpacity } from "react-native";
+
+
+import React, { useState, useCallback, useEffect } from "react";
+import { View, TextInput, StyleSheet, Modal, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useRouter, useLocalSearchParams } from "expo-router";
 import FilterForm from "./SearchFilter";
 
-const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
+const SearchInput = ({ onSearchResults, initialSearch = '', showFilterButton = true }) => {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const [showFilterForm, setShowFilterForm] = useState(false);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState(initialSearch);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentFilters, setCurrentFilters] = useState({});
 
-  const handleApplyFilters = (filters) => {
-    if (onApplyFilters) {
-      onApplyFilters(filters);
+  // Clean filters by removing empty/default values
+
+
+  const handleSearch = useCallback(() => {
+    setIsLoading(true);
+    try {
+      const searchParam = searchText.trim();
+      // Always include search parameter if it exists
+      const baseFilters = {
+        search: searchParam || '',
+        page: 1,
+        limit: 10,
+        sortBy: 'postedDate',
+        sortOrder: 'desc'
+      };
+
+      // Merge with current filters if they exist
+      const cleanedFilters = cleanFilters({
+        ...baseFilters,
+        ...currentFilters
+      });
+  
+      console.log('SearchInput sending filters:', cleanedFilters);
+  
+      if (onSearchResults) {
+        onSearchResults(cleanedFilters);
+      } else {
+        // If no onSearchResults prop, navigate to search page
+        const queryParams = new URLSearchParams();
+        Object.entries(cleanedFilters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            queryParams.append(key, value.toString());
+          }
+        });
+        router.push(`/search?${queryParams.toString()}`);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsLoading(false);
     }
+  }, [searchText, currentFilters, onSearchResults, router]);
+  
+  // Additional check needed in cleanFilters:
+  const cleanFilters = (filters) => {
+    const cleaned = {};
+    Object.entries(filters).forEach(([key, value]) => {
+      if (
+        value !== undefined && 
+        value !== null && 
+        value !== '' && 
+        value !== 'all' &&
+        !(Array.isArray(value) && value.length === 0) &&
+        !(key === 'minSalary' && value === 0) &&
+        !(key === 'maxSalary' && value === 200000)
+      ) {
+        // Convert boolean values to strings for URL compatibility
+        cleaned[key] = typeof value === 'boolean' ? value.toString() : value;
+      }
+    });
+    return cleaned;
+  };
+
+  const handleApplyFilters = useCallback((filters) => {
+    const cleanedFilters = cleanFilters(filters);
+    setCurrentFilters(cleanedFilters);
     setShowFilterForm(false);
-  };
 
-  const handleSearch = () => {
-    if (onSearch) {
-      onSearch(searchText);
+    // Combine with search if exists
+    const searchParam = searchText.trim();
+    if (searchParam) {
+      cleanedFilters.search = searchParam;
     }
-  };
+
+    if (onSearchResults) {
+      onSearchResults(cleanedFilters);
+    }
+  }, [searchText, onSearchResults]);
+
+  // Sync with URL params on mount
+  useEffect(() => {
+    if (params) {
+      const initialFilters = {};
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          initialFilters[key] = value;
+        }
+      });
+      setCurrentFilters(cleanFilters(initialFilters));
+      if (params.search) {
+        setSearchText(params.search);
+      }
+    }
+  }, []);
 
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder={placeholder || "Search..."}
+          placeholder="Search jobs..."
           placeholderTextColor="gray"
           onChangeText={setSearchText}
           value={searchText}
@@ -36,17 +125,28 @@ const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
         <TouchableOpacity 
           style={styles.searchIcon} 
           onPress={handleSearch}
+          disabled={isLoading}
           activeOpacity={0.7}
         >
-          <Ionicons name="search" size={20} color="gray" />
+          {isLoading ? (
+            <ActivityIndicator size="small" color="gray" />
+          ) : (
+            <Ionicons name="search" size={20} color="gray" />
+          )}
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.filterIcon} 
-          onPress={() => setShowFilterForm(true)}
-          activeOpacity={0.7}
-        >
-          <MaterialCommunityIcons name="tune-variant" size={20} color="black" />
-        </TouchableOpacity>
+        {showFilterButton && (
+          <TouchableOpacity 
+            style={styles.filterIcon} 
+            onPress={() => setShowFilterForm(true)}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons 
+              name="tune-variant" 
+              size={20} 
+              color={Object.keys(currentFilters).length > 0 ? "#007AFF" : "black"} 
+            />
+          </TouchableOpacity>
+        )}
       </View>
       <Modal
         visible={showFilterForm}
@@ -57,6 +157,7 @@ const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <FilterForm
+              initialFilters={currentFilters}
               onApplyFilters={handleApplyFilters}
               onClose={() => setShowFilterForm(false)}
             />
@@ -67,6 +168,7 @@ const SearchInput = ({ placeholder, onSearch, onApplyFilters }) => {
   );
 };
 
+// Styles remain the same
 const styles = StyleSheet.create({
   container: {
     marginTop: 10,
@@ -79,7 +181,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.9,
     borderColor: "black",
     paddingHorizontal: 10,
-    marginBottom:1
+    marginBottom: 1,
   },
   input: {
     flex: 1,
