@@ -10,46 +10,53 @@ import React from "react";
 import { useRouter } from "expo-router";
 import SearchInput from "../../components/SearchComponent/SearchInput";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 const { width } = Dimensions.get("window");
 
-
 const CATEGORY_MAPPING = {
-  'Retail': { key: 'retail', icon: '🛍️' },
-  'Customer Service': { key: 'customer-service', icon: '🎯' },
-  'Food Service': { key: 'food-service', icon: '🍽️' },
-  'Education': { key: 'education', icon: '📚' },
-  'Tutoring': { key: 'tutoring', icon: '📖' },
-  'Healthcare': { key: 'healthcare', icon: '🩺' },
-  'Wellness': { key: 'wellness', icon: '❤️' },
-  'Administrative Support': { key: 'administrative', icon: '💼' },
-  'Creative': { key: 'creative', icon: '🎨' },
-  'Design': { key: 'design', icon: '✏️' },
-  'Technology': { key: 'technology', icon: '💻' },
-  'IT': { key: 'it', icon: '🖥️' },
-  'Transportation': { key: 'transportation', icon: '🚚' },
-  'Delivery': { key: 'delivery', icon: '📦' },
-  'Marketing': { key: 'marketing', icon: '📊' },
-  'Sales': { key: 'sales', icon: '💰' },
-  'Finance': { key: 'finance', icon: '💵' },
-  'Accounting': { key: 'accounting', icon: '📈' }
+  Retail: { key: "retail", icon: "🛍️" },
+  "Customer Service": { key: "customer-service", icon: "🎯" },
+  "Food Service": { key: "food-service", icon: "🍽️" },
+  Education: { key: "education", icon: "📚" },
+  Tutoring: { key: "tutoring", icon: "📖" },
+  Healthcare: { key: "healthcare", icon: "🩺" },
+  Wellness: { key: "wellness", icon: "❤️" },
+  "Administrative Support": { key: "administrative", icon: "💼" },
+  Creative: { key: "creative", icon: "🎨" },
+  Design: { key: "design", icon: "✏️" },
+  Technology: { key: "technology", icon: "💻" },
+  IT: { key: "it", icon: "🖥️" },
+  Transportation: { key: "transportation", icon: "🚚" },
+  Delivery: { key: "delivery", icon: "📦" },
+  Marketing: { key: "marketing", icon: "📊" },
+  Sales: { key: "sales", icon: "💰" },
+  Finance: { key: "finance", icon: "💵" },
+  Accounting: { key: "accounting", icon: "📈" },
 };
 const Explore = () => {
   const router = useRouter();
-  const categories = Object.entries(CATEGORY_MAPPING).map(([title, { key, icon }], index) => ({
-    id: index.toString(),
-    title,
-    key,
-    icon,
-  
-  }));
+  const categories = Object.entries(CATEGORY_MAPPING).map(
+    ([title, { key, icon }], index) => ({
+      id: index.toString(),
+      title,
+      key,
+      icon,
+    })
+  );
 
   const handleSearch = (text) => {
     console.log("Search:", text);
   };
 
+handleMap=()=>{
+  router.push({
+    pathname: "(explore)/maps",
+  });
+}
+
   const handleApplyFilters = (filters) => {
-    console.log('Applied filters:', filters);
+    console.log("Applied filters:", filters);
   };
 
   const renderCategoryItem = ({ item }) => (
@@ -61,27 +68,37 @@ const Explore = () => {
       <Text style={Styles.categoryTitle}>{item.title}</Text>
       <Text style={Styles.categoryCount}>{item.count} jobs</Text>
     </TouchableOpacity>
-  )
+  );
 
   const handleCategoryPress = (category) => {
     router.push({
       pathname: `/(explore)/${category.key}`,
-      params: { 
+      params: {
         category: category.title,
-        categoryKey: category.key
-      }
+        categoryKey: category.key,
+      },
     });
   };
 
   return (
     <SafeAreaView style={Styles.container}>
       <View style={Styles.body}>
-        <SearchInput
-          placeholder="Search for jobs..."
-          onSearch={handleSearch}
-        />
-        <ScrollView 
-          contentContainerStyle={{ flexGrow: 1 }} 
+        <View style={Styles.searchContainer}>
+          <View style={Styles.searchWrapper}>
+            <SearchInput
+              placeholder="Search for jobs..."
+              onSearch={handleSearch}
+              style={Styles.searchInput}
+            />
+          </View>
+          <TouchableOpacity style={Styles.mapIconContainer}
+          onPress={handleMap}
+          >
+            <FontAwesome5 name="map-marked-alt" size={24} color="#575757" />
+          </TouchableOpacity>
+        </View>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
         >
           <View style={Styles.categoriesContainer}>
@@ -91,7 +108,7 @@ const Explore = () => {
               renderItem={renderCategoryItem}
               keyExtractor={(item) => item.id}
               numColumns={2}
-              columnWrapperStyle={{ justifyContent: 'space-between' }}
+              columnWrapperStyle={{ justifyContent: "space-between" }}
               scrollEnabled={false}
               contentContainerStyle={{ paddingBottom: 20 }}
             />
@@ -100,7 +117,6 @@ const Explore = () => {
       </View>
     </SafeAreaView>
   );
-
 };
 const Styles = {
   container: {
@@ -146,6 +162,26 @@ const Styles = {
     fontWeight: "700",
     marginBottom: 10,
     marginLeft: 20,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  searchWrapper: {
+    flex: 1,
+  },
+  mapIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 30,
+    borderWidth: 0.8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  mapIcon: {
+    fontSize: 20,
   },
 };
 export default Explore;

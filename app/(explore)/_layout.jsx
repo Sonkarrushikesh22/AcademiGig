@@ -14,6 +14,11 @@ const ExploreLayout = () => {
           title: category ? `${category} Jobs` : 'Jobs',
         }}
       />
+      <Stack.Screen 
+        name="maps"
+        options={{
+          title: 'Jobs Near You',
+        }} />
     </Stack>  
   )
 }

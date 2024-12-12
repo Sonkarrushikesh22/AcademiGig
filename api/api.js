@@ -4,19 +4,21 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Get the appropriate base URL based on platform
-const getBaseURL = () => {
-  if (Platform.OS === 'android') {
-    // Android emulator runs in a VM, so localhost points to the VM, not your machine
-    return 'http://10.0.2.2:8080/api/v1';
-  } else if (Platform.OS === 'ios') {
-    // iOS simulator can use localhost
-    return 'http://localhost:8080/api/v1';
-  } else {
-    // For physical devices, use your computer's local IP address
-    // Example: return 'http://192.168.1.100:8080/api/v1';
-    return 'http://localhost:8080/api/v1';
-  }
-};
+// const getBaseURL = () => {
+//   if (Platform.OS === 'android') {
+//     // Android emulator runs in a VM, so localhost points to the VM, not your machine
+//     return 'http://10.0.2.2:8080/api/v1';
+//   } else if (Platform.OS === 'ios') {
+//     // iOS simulator can use localhost
+//     return 'http://localhost:8080/api/v1';
+//   } else {
+//     // For physical devices, use your computer's local IP address
+//     // Example: return 'http://192.168.1.100:8080/api/v1';
+//     return 'http://192.168.1.1:8080/api/v1';
+//   }
+// };
+
+const getBaseURL = () => 'https://c522-115-98-232-116.ngrok-free.app/api/v1';
 
 const API = axios.create({
   baseURL: getBaseURL(),

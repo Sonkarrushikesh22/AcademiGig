@@ -1,13 +1,15 @@
+
 import axios from 'axios';
 import API from './api';
 import * as FileSystem from 'expo-file-system';
-import * as yup from 'yup';
 
 /**
  * @typedef {Object} JobLocation
  * @property {string} city
  * @property {string} state
  * @property {string} country
+ * @property {number} [latitude]
+ * @property {number} [longitude]
  * @property {boolean} remote
  */
 
@@ -99,29 +101,29 @@ export const getJobs = async ({
   }
 };
 
-/**
- * Get detailed information about a specific job
- * @param {string} jobId - The ID of the job
- * @returns {Promise<Job>}
- */
-export const getJobDetails = async (jobId) => {
-  if (!jobId) {
-    throw new Error('Job ID is required');
-  }
+// /**
+//  * Get detailed information about a specific job
+//  * @param {string} jobId - The ID of the job
+//  * @returns {Promise<Job>}
+//  */
+// export const getJobDetails = async (jobId) => {
+//   if (!jobId) {
+//     throw new Error('Job ID is required');
+//   }
 
-  try {
-    const response = await API.get(`/job/get-job-details/${jobId}`);
+//   try {
+//     const response = await API.get(`/job/get-job-details/${jobId}`);
 
-    if (!response.data.success) {
-      throw new Error(response.data.message || 'Failed to fetch job details');
-    }
+//     if (!response.data.success) {
+//       throw new Error(response.data.message || 'Failed to fetch job details');
+//     }
 
-    return response.data.job;
-  } catch (error) {
-    console.error('Error fetching job details:', error);
-    throw new Error(error.response?.data?.message || 'Failed to fetch job details');
-  }
-};
+//     return response.data.job;
+//   } catch (error) {
+//     console.error('Error fetching job details:', error);
+//     throw new Error(error.response?.data?.message || 'Failed to fetch job details');
+//   }
+// };
 
 /**
  * Get presigned URL for downloading files
@@ -478,108 +480,7 @@ export const getAppliedJobs = async () => {
       throw new Error(error.response?.data?.message || 'Failed to fetch jobs by category');
     }
   };
-
-
   
-
-
-  // const VALID_SORT_FIELDS = ['postedDate', 'salary.min', 'title', 'company'];
-  // const VALID_JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Temporary', 'Internship'];
-  // const VALID_EXPERIENCE_LEVELS = ['Entry', 'Mid', 'Senior'];
-  // const DEFAULT_PAGE_SIZE = 10;
-  
-  // /**
-  //  * Validates and sanitizes filter parameters
-  //  */
-  // const validateFilterParams = (params) => {
-  //   const sanitized = { ...params };
-  
-  //   if (sanitized.search) {
-  //     sanitized.search = sanitized.search.trim();
-  //   }
-
-  //   // Validate sortBy
-  //   if (sanitized.sortBy && !VALID_SORT_FIELDS.includes(sanitized.sortBy)) {
-  //     throw new Error(`Invalid sortBy parameter. Must be one of: ${VALID_SORT_FIELDS.join(', ')}`);
-  //   }
-  
-  //   // Validate sortOrder
-  //   if (sanitized.sortOrder && !['asc', 'desc'].includes(sanitized.sortOrder.toLowerCase())) {
-  //     throw new Error('Invalid sortOrder parameter. Must be either "asc" or "desc"');
-  //   }
-  
-  //   // Validate jobType
-  //   if (sanitized.jobType && !VALID_JOB_TYPES.includes(sanitized.jobType)) {
-  //     throw new Error(`Invalid jobType parameter. Must be one of: ${VALID_JOB_TYPES.join(', ')}`);
-  //   }
-  
-  //   // Validate experienceLevel
-  //   if (sanitized.experienceLevel && !VALID_EXPERIENCE_LEVELS.includes(sanitized.experienceLevel)) {
-  //     throw new Error(`Invalid experienceLevel parameter. Must be one of: ${VALID_EXPERIENCE_LEVELS.join(', ')}`);
-  //   }
-  
-  //   // Validate salary values
-  //   if (sanitized.minSalary !== undefined) {
-  //     const minSalary = Number(sanitized.minSalary);
-  //     if (isNaN(minSalary) || minSalary < 0) {
-  //       throw new Error('Invalid minSalary parameter. Must be a positive number');
-  //     }
-  //     sanitized.minSalary = minSalary;
-  //   }
-  
-  //   if (sanitized.maxSalary !== undefined) {
-  //     const maxSalary = Number(sanitized.maxSalary);
-  //     if (isNaN(maxSalary) || maxSalary < 0) {
-  //       throw new Error('Invalid maxSalary parameter. Must be a positive number');
-  //     }
-  //     sanitized.maxSalary = maxSalary;
-  //   }
-  
-  //   // Validate dates
-  //   if (sanitized.postedAfter) {
-  //     const afterDate = new Date(sanitized.postedAfter);
-  //     if (isNaN(afterDate.getTime())) {
-  //       throw new Error('Invalid postedAfter date format');
-  //     }
-  //     sanitized.postedAfter = afterDate.toISOString();
-  //   }
-  
-  //   if (sanitized.postedBefore) {
-  //     const beforeDate = new Date(sanitized.postedBefore);
-  //     if (isNaN(beforeDate.getTime())) {
-  //       throw new Error('Invalid postedBefore date format');
-  //     }
-  //     sanitized.postedBefore = beforeDate.toISOString();
-  //   }
-  
-  //   // Validate pagination
-  //   sanitized.page = Math.max(1, parseInt(sanitized.page) || 1);
-  //   sanitized.limit = Math.max(1, parseInt(sanitized.limit) || DEFAULT_PAGE_SIZE);
-  
-  //   // Handle skills array
-  //   if (sanitized.skills) {
-  //     if (Array.isArray(sanitized.skills)) {
-  //       sanitized.skills = sanitized.skills
-  //         .filter(skill => typeof skill === 'string' && skill.trim())
-  //         .join(',');
-  //     } else if (typeof sanitized.skills === 'string') {
-  //       sanitized.skills = sanitized.skills.trim();
-  //     }
-  //   }
-  
-  //   // Remove empty values
-  //   Object.keys(sanitized).forEach(key => {
-  //     if (sanitized[key] === '' || sanitized[key] === undefined || sanitized[key] === null) {
-  //       delete sanitized[key];
-  //     }
-  //   });
-    
-  //   if (sanitized.search === '') {
-  //     delete sanitized.search;
-  //   }
-
-  //   return sanitized;
-  // };
   const validateFilterParams = (params) => {
     const {
       search,
@@ -717,9 +618,6 @@ export const getAppliedJobs = async () => {
     }
   };
   
-  // Helper function to validate and sanitize filter parameters
-
-  
 
 /**
  * Fetch available filter options
@@ -777,4 +675,40 @@ export const createDebouncedFilter = (callback, delay = 300) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => callback(...args), delay);
   };
+};
+
+export const getJobsInRadius = async ({ latitude, longitude, radius = 50, page = 1, limit = 10 }) => {
+  try {
+    const params = {
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+      radius: radius.toString(),
+      page: page.toString(),
+      limit: limit.toString()
+    };
+    
+    const response = await API.get('/job/get-job-in-radius', { params });
+    const data = response.data;
+
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch jobs in radius');
+    }
+
+    return {
+      jobs: data.jobs.map(job => ({
+        ...job,
+        location: {
+          latitude: job.coordinate.latitude,
+          longitude: job.coordinate.longitude
+        }
+      })),
+      total: data.total,
+      page: data.page,
+      limit: data.limit,
+      searchLocation: data.searchLocation
+    };
+  } catch (error) {
+    console.error('Error fetching jobs in radius:', error);
+    throw error;
+  }
 };

@@ -26,6 +26,7 @@
     "expo-av": "^14.0.7",
     "expo-blur": "~13.0.2",
     "expo-constants": "^16.0.2",
+    "expo-dev-client": "~4.0.29",
     "expo-device": "^6.0.2",
     "expo-document-picker": "~12.0.2",
     "expo-file-system": "~17.0.1",
@@ -34,6 +35,7 @@
     "expo-linear-gradient": "^13.0.2",
     "expo-linking": "~6.3.1",
     "expo-localization": "~15.0.3",
+    "expo-location": "~17.0.1",
     "expo-router": "3.5.24",
     "expo-splash-screen": "^0.27.7",
     "expo-status-bar": "~1.12.1",
@@ -44,8 +46,10 @@
     "react-native": "^0.74.5",
     "react-native-drawer-layout": "^4.0.1",
     "react-native-fast-image": "^8.6.3",
+    "react-native-geocoding": "^0.5.0",
     "react-native-gesture-handler": "~2.16.1",
     "react-native-linear-gradient": "^2.8.3",
+    "react-native-maps": "1.14.0",
     "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-paper": "^5.10.1",
     "react-native-reanimated": "~3.10.1",
@@ -59,5 +63,6 @@
     "@babel/core": "^7.20.0",
     "tailwindcss": "^3.3.2"
   },
-  "private": true
+  "private": true,
+  "Transform": "AWS::Serverless-2016-10-31"
 }

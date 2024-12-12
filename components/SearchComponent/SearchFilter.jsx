@@ -316,22 +316,25 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
             onChangeText={(text) => setFilters({ ...filters, country: text })}
             placeholder="Country"
           />
-          <TouchableOpacity
-            style={[
-              styles.remoteButton,
-              filters.isRemote && styles.remoteButtonSelected,
-            ]}
-            onPress={() => setFilters({ ...filters, isRemote: !filters.isRemote })}
-          >
-            <Text
-              style={[
-                styles.remoteButtonText,
-                filters.isRemote && styles.optionTextSelected,
-              ]}
-            >
-              Remote Only
-            </Text>
-          </TouchableOpacity>
+       <TouchableOpacity
+  style={[
+    styles.remoteButton,
+    filters.isRemote === true && styles.remoteButtonSelected,
+  ]}
+  onPress={() => setFilters({ 
+    ...filters, 
+    isRemote: filters.isRemote !== true 
+  })}
+>
+  <Text
+    style={[
+      styles.remoteButtonText,
+      filters.isRemote === true && styles.optionTextSelected,
+    ]}
+  >
+    Remote Only
+  </Text>
+</TouchableOpacity>
         </View>
 
         <View style={styles.filterSection}>
@@ -343,7 +346,7 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
                 filters.sortBy === 'postedDate' && styles.sortButtonSelected,
               ]}
               onPress={() => setFilters({ ...filters, sortBy: 'postedDate' })}
-            >
+              >
               <Text
                 style={[
                   styles.sortButtonText,

@@ -194,6 +194,7 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
 }
 
 if (rnVersion < versionToNumber(0, 75, 0)) {
