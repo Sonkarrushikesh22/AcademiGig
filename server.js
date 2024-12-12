@@ -40,4 +40,4 @@ app.listen(PORT, () => {
     readable: new Date(now).toLocaleString(),
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
 });
-});   
+});

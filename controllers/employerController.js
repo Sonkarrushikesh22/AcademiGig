@@ -34,11 +34,9 @@ exports.getUploadPresignedUrl = async (req, res) => {
 };
 
 
-
-
 exports.createJob = async (req, res) => {
   try {
-    const employerId = req.user.userId; // Ensure the user is authenticated
+    const employerId = req.user.userId;
     const {
       title,
       company,
@@ -46,7 +44,13 @@ exports.createJob = async (req, res) => {
       requirements,
       responsibilities,
       salary,
-      location,
+      location: {
+        coordinates,
+        city,
+        state,
+        country,
+        remote = false
+      },
       jobType,
       category,
       applicationDeadline,
@@ -56,7 +60,7 @@ exports.createJob = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!title || !company || !description || !jobType || !category) {
+    if (!title || !company || !description || !jobType || !category || !coordinates) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -73,7 +77,14 @@ exports.createJob = async (req, res) => {
       requirements,
       responsibilities,
       salary,
-      location,
+      location: {
+        type: 'Point',
+        coordinates,
+        city,
+        state,
+        country,
+        remote
+      },
       jobType,
       category,
       applicationDeadline,
@@ -104,4 +115,3 @@ exports.createJob = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-

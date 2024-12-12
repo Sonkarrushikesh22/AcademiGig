@@ -23,6 +23,15 @@ const JobSchema = new Schema({
     currency: { type: String, default: 'USD' },
   },
   location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],  // [longitude, latitude]
+      required: true
+    },
     city: String,
     state: String,
     country: String,
@@ -52,7 +61,7 @@ const JobSchema = new Schema({
   companyLogoKey: String,
 });
 
-// Add a Text Index to the Schema
+// Add Text Index
 JobSchema.index(
   {
     title: 'text',
@@ -61,13 +70,16 @@ JobSchema.index(
   },
   {
     weights: {
-      title: 10,       // Title matches are most important
-      company: 5,      // Company matches are second most important
-      description: 1,  // Description matches have standard weight
+      title: 10,
+      company: 5,
+      description: 1,
     },
-    name: 'JobSearchIndex', // Give the index a name for easier management
+    name: 'JobSearchIndex',
   }
 );
+
+// Add Geospatial Index
+JobSchema.index({ "location": "2dsphere" });
 
 // Create the Job Model
 const Job = mongoose.model('Job', JobSchema);
@@ -75,10 +87,10 @@ const Job = mongoose.model('Job', JobSchema);
 // Ensure Index Creation
 Job.createIndexes()
   .then(() => {
-    console.log('Job search indexes created successfully');
+    console.log('Job search and geospatial indexes created successfully');
   })
   .catch((err) => {
-    console.error('Error creating job search indexes:', err);
+    console.error('Error creating job indexes:', err);
   });
 
 module.exports = Job;

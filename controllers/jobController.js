@@ -2,7 +2,6 @@ const Job = require('../models/Job');
 const s3Service = require('../services/fileUploadService');
 const mongoose = require('mongoose');
 
-
 exports.getAllJobs = async (req, res) => {
   try {
     const { 
@@ -37,8 +36,15 @@ exports.getAllJobs = async (req, res) => {
         { 'location.city': { $regex: location, $options: 'i' } },
         { 'location.state': { $regex: location, $options: 'i' } },
         { 'location.country': { $regex: location, $options: 'i' } },
+        { 'location.latitude': { $regex: location, $options: 'i' } },
+        { 'location.longitude': { $regex: location, $options: 'i' } },
         { 'location.remote': location === 'remote' },
       ];
+    }
+
+    if (req.query.requireLocation) {
+      query['location.latitude'] = { $exists: true };
+      query['location.longitude'] = { $exists: true };
     }
 
     const skip = (page - 1) * limit;
@@ -76,36 +82,36 @@ exports.getAllJobs = async (req, res) => {
 };
 
  
-exports.getJobDetails = async (req, res) => {
-  try {
-    const { id } = req.params; // Extract job ID from request parameters
+// exports.getJobDetails = async (req, res) => {
+//   try {
+//     const { id } = req.params; // Extract job ID from request parameters
 
-    // Fetch job by ID
-    const job = await Job.findById(id).populate('employers', 'name email');
+//     // Fetch job by ID
+//     const job = await Job.findById(id).populate('employers', 'name email');
 
-    if (!job) {
-      return res.status(404).json({ success: false, message: 'Job not found' });
-    }
+//     if (!job) {
+//       return res.status(404).json({ success: false, message: 'Job not found' });
+//     }
 
-    // Fetch presigned URL for company logo if it exists
-    let companyLogoUrl = null;
-    if (job.companyLogoKey) {
-      companyLogoUrl = await s3Service.getObjectURL(job.companyLogoKey);
-    }
+//     // Fetch presigned URL for company logo if it exists
+//     let companyLogoUrl = null;
+//     if (job.companyLogoKey) {
+//       companyLogoUrl = await s3Service.getObjectURL(job.companyLogoKey);
+//     }
 
-    // Return job details along with logo URL
-    res.status(200).json({
-      success: true,
-      job: { ...job.toObject(), companyLogoUrl },
-    });
-  } catch (error) {
-    console.error('Error fetching job details:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch job details.',
-    });
-  }
-};
+//     // Return job details along with logo URL
+//     res.status(200).json({
+//       success: true,
+//       job: { ...job.toObject(), companyLogoUrl },
+//     });
+//   } catch (error) {
+//     console.error('Error fetching job details:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch job details.',
+//     });
+//   }
+// };
 
 
 exports.getDownloadPresignedUrl = async (req, res) => {
@@ -198,7 +204,6 @@ exports.getJobsByCategory = async (req, res) => {
 };
 
 //job filter
-
 exports.filterJobs = async (req, res) => {
   try {
     console.log('Received Raw Filter Parameters:', req.query);
@@ -444,7 +449,6 @@ exports.filterJobs = async (req, res) => {
     });
   }
 };
-
 // Enhanced Filter Options Endpoint
 exports.getFilterOptions = async (req, res) => {
   try {
@@ -474,6 +478,106 @@ exports.getFilterOptions = async (req, res) => {
       success: false,
       message: 'Failed to fetch filter options',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// ti get job within radius of a location
+exports.getJobsInRadius = async (req, res) => {
+  try {
+    const {
+      latitude,
+      longitude,
+      radius = 50,
+      page = 1,
+      limit = 10,
+      sortBy = 'distance'
+    } = req.query;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        success: false,
+        message: 'Latitude and longitude are required'
+      });
+    }
+
+    const coordinates = [parseFloat(longitude), parseFloat(latitude)];
+    const radiusInMeters = parseFloat(radius) * 1000;
+
+    const pipeline = [
+      {
+        $geoNear: {
+          near: {
+            type: 'Point',
+            coordinates: coordinates
+          },
+          distanceField: 'distance',
+          maxDistance: radiusInMeters,
+          distanceMultiplier: 0.001, // Convert to kilometers
+          spherical: true
+        }
+      },
+      {
+        $sort: { distance: 1 }
+      },
+      {
+        $skip: (parseInt(page) - 1) * parseInt(limit)
+      },
+      {
+        $limit: parseInt(limit)
+      },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          company: 1,
+          location: 1,
+          salary: 1,
+          distance: 1,
+          coordinates: '$location.coordinates',
+          distanceText: {
+            $concat: [{ $toString: { $round: ['$distance', 1] } }, ' km away']
+          }
+        }
+      }
+    ];
+
+    const [jobs, totalCount] = await Promise.all([
+      Job.aggregate(pipeline),
+      Job.aggregate([...pipeline.slice(0, 1), { $count: 'total' }])
+    ]);
+
+    // Format the response to be more map-friendly
+    const formattedJobs = jobs.map(job => ({
+      id: job._id.toString(),
+      title: job.title,
+      company: job.company,
+      coordinate: {
+        latitude: job.coordinates[1],
+        longitude: job.coordinates[0]
+      },
+      distance: job.distance,
+      distanceText: job.distanceText,
+      salary: job.salary
+    }));
+
+    res.status(200).json({
+      success: true,
+      total: totalCount[0]?.total || 0,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      searchLocation: {
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+        radiusKm: parseFloat(radius)
+      },
+      jobs: formattedJobs
+    });
+  } catch (error) {
+    console.error('Error fetching jobs by location:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch jobs by location'
     });
   }
 };
