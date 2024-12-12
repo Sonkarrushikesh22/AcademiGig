@@ -1,630 +1,753 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Post a New Job</title>
     <style>
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-        }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+      }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+      .form-group {
+        margin-bottom: 20px;
+      }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
 
-        input[type="text"],
-        input[type="number"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
+      input[type="text"],
+      input[type="number"],
+      textarea,
+      select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
 
-        textarea {
-            min-height: 120px;
-        }
+      textarea {
+        min-height: 120px;
+      }
 
-        .salary-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+      .salary-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
 
-        .currency-select {
-            width: 100px;
-        }
+      .currency-select {
+        width: 100px;
+      }
 
-        .location-group {
-            display: flex;
-            gap: 10px;
-        }
+      .location-group {
+        display: flex;
+        gap: 10px;
+      }
 
-        .skills-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            min-height: 50px;
-        }
+      .skills-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-height: 50px;
+      }
 
-        .skill-tag {
-            background: #e9ecef;
-            padding: 5px 10px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+      .skill-tag {
+        background: #e9ecef;
+        padding: 5px 10px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
 
-        .skill-tag button {
-            border: none;
-            background: none;
-            color: #666;
-            cursor: pointer;
-            padding: 0;
-            font-size: 14px;
-        }
+      .skill-tag button {
+        border: none;
+        background: none;
+        color: #666;
+        cursor: pointer;
+        padding: 0;
+        font-size: 14px;
+      }
 
-        .logo-upload {
-            border: 2px dashed #ddd;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-            position: relative;
-        }
+      .logo-upload {
+        border: 2px dashed #ddd;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+        position: relative;
+      }
 
-        .logo-preview {
-            max-width: 200px;
-            max-height: 200px;
-            margin: 10px auto;
-            display: none;
-        }
+      .logo-preview {
+        max-width: 200px;
+        max-height: 200px;
+        margin: 10px auto;
+        display: none;
+      }
 
-        .upload-progress {
-            height: 4px;
-            background: #f0f0f0;
-            margin-top: 10px;
-            border-radius: 2px;
-            overflow: hidden;
-        }
+      .upload-progress {
+        height: 4px;
+        background: #f0f0f0;
+        margin-top: 10px;
+        border-radius: 2px;
+        overflow: hidden;
+      }
 
-        .upload-progress-bar {
-            height: 100%;
-            background: #4CAF50;
-            width: 0;
-            transition: width 0.3s ease;
-        }
+      .upload-progress-bar {
+        height: 100%;
+        background: #4caf50;
+        width: 0;
+        transition: width 0.3s ease;
+      }
 
-        .error-message {
-            color: #dc3545;
-            margin-top: 5px;
-            font-size: 14px;
-        }
+      .error-message {
+        color: #dc3545;
+        margin-top: 5px;
+        font-size: 14px;
+      }
 
-        button[type="submit"] {
-            background: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+      button[type="submit"] {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
 
-        button[type="submit"]:hover {
-            background: #0056b3;
-        }
+      button[type="submit"]:hover {
+        background: #0056b3;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>Post a New Job</h1>
-        <form id="jobPostForm">
-            <div class="form-group">
-                <label for="logoInput">Company Logo</label>
-                <div class="logo-upload">
-                    <input type="file" id="logoInput" accept="image/jpeg,image/png,image/gif">
-                    <img id="previewImage" class="logo-preview" alt="Logo preview">
-                    <div class="upload-progress">
-                        <div class="upload-progress-bar"></div>
-                    </div>
-                    <div id="errorMessage" class="error-message"></div>
-                </div>
+      <h1>Post a New Job</h1>
+      <form id="jobPostForm">
+        <!-- Logo Upload -->
+        <div class="form-group">
+          <label for="logoInput">Company Logo*</label>
+          <div class="logo-upload">
+            <input
+              type="file"
+              id="logoInput"
+              accept="image/jpeg,image/png,image/gif"
+              required
+            />
+            <img id="previewImage" class="logo-preview" alt="Logo preview" />
+            <div class="upload-progress">
+              <div class="upload-progress-bar"></div>
             </div>
-
-            <div class="form-group">
-                <label for="jobTitle">Job Title*</label>
-                <input type="text" id="jobTitle" required>
-            </div>
-
-            <div class="form-group">
-                <label for="companyName">Company Name*</label>
-                <input type="text" id="companyName" required>
-            </div>
-
-            <div class="form-group">
-                <label for="jobDescription">Job Description*</label>
-                <textarea id="jobDescription" required></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="requirements">Requirements</label>
-                <textarea id="requirements"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="responsibilities">Responsibilities</label>
-                <textarea id="responsibilities"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Salary Range</label>
-                <div class="salary-group">
-                    <input type="number" id="salaryMin" placeholder="Min">
-                    <input type="number" id="salaryMax" placeholder="Max">
-                    <select id="currency" class="currency-select">
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Location</label>
-                <div class="location-group">
-                    <input type="text" id="location" placeholder="City, Country">
-                    <label>
-                        <input type="checkbox" id="remote"> Remote Position
-                    </label>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="jobType">Job Type*</label>
-                <select id="jobType" required>
-                    <option value="">Select Job Type</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Temporary">Temporary</option>
-                    <option value="Internship">Internship</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="category">Category*</label>
-                <select id="category" required>
-                  <option value="">Select Category</option>
-                  <option value="retail">Retail and Customer Service</option>
-                  <option value="food-service">Food Service</option>
-                  <option value="education">Education and Tutoring</option>
-                  <option value="healthcare">Healthcare and Wellness</option>
-                  <option value="administrative">Administrative Support</option>
-                  <option value="creative">Creative and Design</option>
-                  <option value="technology">Technology and IT</option>
-                  <option value="transportation">Transportation and Delivery</option>
-                  <option value="marketing">Marketing and Sales</option>
-                  <option value="finance">Finance and Accounting</option>
-              </select>
-              
-            </div>
-
-            <div class="form-group">
-                <label for="deadline">Application Deadline</label>
-                <input type="date" id="deadline">
-            </div>
-
-            <div class="form-group">
-                <label for="experience">Experience Level</label>
-                <select id="experience" required>
-                    <option value="">Select Experience Level</option>
-                    <option value="Entry">Entry</option>
-                    <option value="Mid">Mid</option>
-                    <option value="Senior">Senior</option>
-                </select>
-            </div>
-            
-
-            <div class="form-group">
-                <label for="skills">Skills</label>
-                <input type="text" id="skillInput" placeholder="Type a skill and press Enter">
-                <div id="skillsContainer" class="skills-container"></div>
-            </div>
-
-            <button type="submit">Post Job</button>
-        </form>
+            <div id="errorMessage" class="error-message"></div>
+          </div>
+        </div>
+  
+        <!-- Job Title -->
+        <div class="form-group">
+          <label for="jobTitle">Job Title*</label>
+          <input type="text" id="jobTitle" required />
+        </div>
+  
+        <!-- Company Name -->
+        <div class="form-group">
+          <label for="companyName">Company Name*</label>
+          <input type="text" id="companyName" required />
+        </div>
+  
+        <!-- Job Description -->
+        <div class="form-group">
+          <label for="jobDescription">Job Description*</label>
+          <textarea id="jobDescription" required></textarea>
+        </div>
+  
+        <!-- Requirements -->
+        <div class="form-group">
+          <label for="requirements">Requirements (one per line)</label>
+          <textarea id="requirements" placeholder="Enter requirements separated by new lines"></textarea>
+        </div>
+  
+        <!-- Responsibilities -->
+        <div class="form-group">
+          <label for="responsibilities">Responsibilities (one per line)</label>
+          <textarea id="responsibilities" placeholder="Enter responsibilities separated by new lines"></textarea>
+        </div>
+  
+        <!-- Salary -->
+        <div class="form-group">
+          <label>Salary Range*</label>
+          <div class="salary-group">
+            <input
+              type="number"
+              id="salaryMin"
+              placeholder="Min"
+              required
+              min="1"
+            />
+            <input
+              type="number"
+              id="salaryMax"
+              placeholder="Max"
+              required
+              min="1"
+            />
+            <select id="currency" class="currency-select" required>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+          <small class="form-text">Min and Max values must be valid and Min ≤ Max.</small>
+        </div>
+  
+        <!-- Location -->
+        <div class="form-group">
+          <label>Location*</label>
+          <div class="location-group">
+            <input
+              type="text"
+              id="locationCity"
+              placeholder="City"
+            />
+            <input
+              type="text"
+              id="locationState"
+              placeholder="State"
+            />
+            <input
+              type="text"
+              id="locationCountry"
+              placeholder="Country"
+            />
+            <input
+            type="number"
+            id="latitude"
+            placeholder="Latitude"
+            step="0.0000001"  // Allow decimal precision
+            min="-90"         // Minimum valid latitude
+            max="90"          // Maximum valid latitude
+          />
+          <input
+            type="number"
+            id="longitude"
+            placeholder="Longitude"
+            step="0.0000001"  // Allow decimal precision
+            min="-180"        // Minimum valid longitude
+            max="180"         // Maximum valid longitude
+          />
+            <label>
+              <input type="checkbox" id="remote" /> Remote Position
+            </label>
+          </div>
+          <small class="form-text">Provide at least one location field or check "Remote Position".</small>
+        </div>
+  
+        <!-- Job Type -->
+        <div class="form-group">
+          <label for="jobType">Job Type*</label>
+          <select id="jobType" required>
+            <option value="">Select Job Type</option>
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+            <option value="Contract">Contract</option>
+            <option value="Temporary">Temporary</option>
+            <option value="Internship">Internship</option>
+          </select>
+        </div>
+  
+        <!-- Category -->
+        <div class="form-group">
+          <label for="category">Category*</label>
+          <select id="category" required>
+            <option value="">Select Category</option>
+            <option value="retail">Retail and Customer Service</option>
+            <option value="food-service">Food Service</option>
+            <option value="education">Education and Tutoring</option>
+            <option value="healthcare">Healthcare and Wellness</option>
+            <option value="administrative">Administrative Support</option>
+            <option value="creative">Creative and Design</option>
+            <option value="technology">Technology and IT</option>
+            <option value="transportation">Transportation and Delivery</option>
+            <option value="marketing">Marketing and Sales</option>
+            <option value="finance">Finance and Accounting</option>
+          </select>
+        </div>
+  
+        <!-- Application Deadline -->
+        <div class="form-group">
+          <label for="deadline">Application Deadline</label>
+          <input type="date" id="deadline" />
+        </div>
+  
+        <!-- Experience Level -->
+        <div class="form-group">
+          <label for="experience">Experience Level*</label>
+          <select id="experience" required>
+            <option value="">Select Experience Level</option>
+            <option value="Entry">Entry</option>
+            <option value="Mid">Mid</option>
+            <option value="Senior">Senior</option>
+          </select>
+        </div>
+  
+        <!-- Skills -->
+        <div class="form-group">
+          <label for="skills">Skills</label>
+          <input
+            type="text"
+            id="skillInput"
+            placeholder="Type a skill and press Enter"
+          />
+          <div id="skillsContainer" class="skills-container"></div>
+        </div>
+  
+        <!-- Submit -->
+        <button type="submit">Post Job</button>
+      </form>
     </div>
 
     <script>
-        // Logo upload handling
-        async function handleLogoUpload(file) {
-            try {
-            
-          
-              const token = localStorage.getItem('token');
-              const params = new URLSearchParams({
-                fileType: 'job-logo',
-                filename: file.name,
-                contentType: file.type
-              });
-          
-              // First, log the request details
-              console.log('Requesting presigned URL with params:', params.toString());
-              console.log('Token:', token); // Make sure to mask this in production
-          
-              const presignedUrlResponse = await fetch(
-                `http://localhost:8080/api/v1/employer/job-logo-upload-url?${params}`,
-                {
-                  method: 'GET',
-                  headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                  }
-                }
+      // Logo upload handling
+      async function handleLogoUpload(file) {
+        try {
+          const token = localStorage.getItem("token");
+          const params = new URLSearchParams({
+            fileType: "job-logo",
+            filename: file.name,
+            contentType: file.type,
+          });
+
+          // First, log the request details
+          console.log(
+            "Requesting presigned URL with params:",
+            params.toString()
+          );
+          console.log("Token:", token); // Make sure to mask this in production
+
+          const presignedUrlResponse = await fetch(
+            `http://localhost:8080/api/v1/employer/job-logo-upload-url?${params}`,
+            {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (!presignedUrlResponse.ok) {
+            if (presignedUrlResponse.status === 401) {
+              logout();
+              throw new Error("Session expired. Please login again.");
+            }
+            throw new Error(
+              `Failed to get upload URL: ${presignedUrlResponse.statusText}`
+            );
+          }
+
+          // Log the entire response for debugging
+          const responseData = await presignedUrlResponse.json();
+          console.log("Presigned URL Response:", responseData);
+
+          // Check the exact structure of your response
+          let uploadUrl;
+          if (responseData.url) {
+            uploadUrl = responseData.url;
+          } else if (responseData.uploadUrl) {
+            uploadUrl = responseData.uploadUrl;
+          } else if (responseData.presignedUrl) {
+            uploadUrl = responseData.presignedUrl;
+          } else {
+            throw new Error("No upload URL found in response");
+          }
+
+          if (!uploadUrl) {
+            throw new Error("Upload URL is undefined");
+          }
+
+          console.log("Using upload URL:", uploadUrl);
+
+          // Upload to S3
+          const uploadResponse = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": file.type,
+            },
+            body: file,
+          });
+
+          console.log("Upload response status:", uploadResponse.status);
+
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error("Upload error response:", errorText);
+            throw new Error(
+              `Failed to upload file to S3. Status: ${uploadResponse.status}. Error: ${errorText}`
+            );
+          }
+
+          // Success handling
+          const progressBar = document.querySelector(".upload-progress-bar");
+          progressBar.style.width = "100%";
+
+          const errorMessage = document.querySelector("#errorMessage");
+          errorMessage.textContent = "";
+
+          // Log success and return the file URL
+          const fileUrl = uploadUrl.split("?")[0]; // Get the base S3 URL without the presigned parameters
+          console.log("Upload successful. File URL:", fileUrl);
+
+          return {
+            success: true,
+            fileUrl,
+          };
+        } catch (error) {
+          console.error("Error uploading logo:", error);
+
+          const errorMessage = document.querySelector("#errorMessage");
+          errorMessage.textContent = `Upload failed: ${error.message}`;
+
+          const progressBar = document.querySelector(".upload-progress-bar");
+          progressBar.style.width = "0%";
+
+          return {
+            success: false,
+            error: error.message,
+          };
+        }
+      }
+
+      function uploadLogo() {
+        if (!isAuthenticated()) {
+          const errorMessage = document.querySelector("#errorMessage");
+          errorMessage.textContent = "Please login to upload files";
+          return;
+        }
+
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "image/*";
+
+        fileInput.addEventListener("change", async (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          // Validate file type
+          if (!file.type.startsWith("image/")) {
+            const errorMessage = document.querySelector("#errorMessage");
+            errorMessage.textContent = "Please select an image file";
+            return;
+          }
+
+          // Validate file size (5MB)
+          const MAX_FILE_SIZE = 5 * 1024 * 1024;
+          if (file.size > MAX_FILE_SIZE) {
+            const errorMessage = document.querySelector("#errorMessage");
+            errorMessage.textContent = "File size must be less than 5MB";
+            return;
+          }
+
+          const progressBar = document.querySelector(".upload-progress-bar");
+          progressBar.style.width = "50%";
+
+          // Add loading state
+          const uploadButton = document.querySelector("#uploadButton"); // Add id="uploadButton" to your upload button
+          if (uploadButton) {
+            uploadButton.disabled = true;
+            uploadButton.textContent = "Uploading...";
+          }
+
+          try {
+            const result = await handleLogoUpload(file);
+
+            if (result.success) {
+              // Handle successful upload
+              const successMessage = document.querySelector("#errorMessage");
+              successMessage.style.color = "green";
+              successMessage.textContent = "File uploaded successfully!";
+            }
+          } finally {
+            // Reset button state
+            if (uploadButton) {
+              uploadButton.disabled = false;
+              uploadButton.textContent = "Upload Logo";
+            }
+          }
+        });
+
+        fileInput.click();
+      }
+
+      // Helper to check the response structure
+      function debugResponse(response) {
+        console.log(
+          "Response Headers:",
+          Array.from(response.headers.entries())
+        );
+        console.log("Response Status:", response.status);
+        return response.text().then((text) => {
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            console.log("Raw Response:", text);
+            throw new Error("Failed to parse response as JSON");
+          }
+        });
+      }
+
+      // Add upload progress tracking
+      async function uploadLogoWithProgress() {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "image/jpeg";
+
+        fileInput.addEventListener("change", async (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          // Validate file type
+          if (!file.type.startsWith("image/jpeg")) {
+            const errorMessage = document.querySelector("#errorMessage");
+            errorMessage.textContent = "Please select an image file.";
+            return;
+          }
+
+          // Validate file size (e.g., 5MB limit)
+          const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+          if (file.size > MAX_FILE_SIZE) {
+            const errorMessage = document.querySelector("#errorMessage");
+            errorMessage.textContent = "File size must be less than 5MB.";
+            return;
+          }
+
+          const progressBar = document.querySelector(".upload-progress-bar");
+          progressBar.style.width = "50%";
+
+          await handleLogoUpload(file);
+        });
+
+        fileInput.click();
+      }
+
+      // Debugging helper
+      function logUploadError(error, uploadUrl, file) {
+        console.error("Upload Error Details:");
+        console.error("Error:", error);
+        console.error("Presigned URL:", uploadUrl);
+        console.error("File details:", {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        });
+      }
+
+      // Form handling
+      document.addEventListener("DOMContentLoaded", () => {
+        const jobForm = document.getElementById("jobPostForm");
+        const logoInput = document.getElementById("logoInput");
+        const previewImage = document.getElementById("previewImage");
+        const progressBar = document.querySelector(".upload-progress-bar");
+        const errorMessage = document.getElementById("errorMessage");
+        const skillInput = document.getElementById("skillInput");
+        const skillsContainer = document.getElementById("skillsContainer");
+        let uploadedFileName = null;
+        let skills = new Set();
+
+        // Logo preview and upload
+        logoInput.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              previewImage.src = e.target.result;
+              previewImage.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+            uploadLogo(file);
+          }
+        });
+
+        async function uploadLogo(file) {
+          try {
+            progressBar.style.width = "0%";
+            errorMessage.textContent = "";
+            progressBar.style.width = "30%";
+
+            const uploadResult = await handleLogoUpload(file); // Await the upload response
+            if (uploadResult.success) {
+              const fileUrl = uploadResult.fileUrl;
+              // Extract the key from the file URL (e.g., "job-logos/logo.png")
+              uploadedFileName = fileUrl.substring(
+                fileUrl.lastIndexOf("/") + 1
               );
-          
-              if (!presignedUrlResponse.ok) {
-                if (presignedUrlResponse.status === 401) {
-                  logout();
-                  throw new Error('Session expired. Please login again.');
-                }
-                throw new Error(`Failed to get upload URL: ${presignedUrlResponse.statusText}`);
-              }
-          
-              // Log the entire response for debugging
-              const responseData = await presignedUrlResponse.json();
-              console.log('Presigned URL Response:', responseData);
-          
-              // Check the exact structure of your response
-              let uploadUrl;
-              if (responseData.url) {
-                uploadUrl = responseData.url;
-              } else if (responseData.uploadUrl) {
-                uploadUrl = responseData.uploadUrl;
-              } else if (responseData.presignedUrl) {
-                uploadUrl = responseData.presignedUrl;
-              } else {
-                throw new Error('No upload URL found in response');
-              }
-          
-              if (!uploadUrl) {
-                throw new Error('Upload URL is undefined');
-              }
-          
-              console.log('Using upload URL:', uploadUrl);
-          
-              // Upload to S3
-              const uploadResponse = await fetch(uploadUrl, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': file.type,
-                },
-                body: file
-              });
-          
-              console.log('Upload response status:', uploadResponse.status);
-              
-              if (!uploadResponse.ok) {
-                const errorText = await uploadResponse.text();
-                console.error('Upload error response:', errorText);
-                throw new Error(`Failed to upload file to S3. Status: ${uploadResponse.status}. Error: ${errorText}`);
-              }
-          
-              // Success handling
-              const progressBar = document.querySelector('.upload-progress-bar');
-              progressBar.style.width = '100%';
-              
-              const errorMessage = document.querySelector('#errorMessage');
-              errorMessage.textContent = '';
-          
-              // Log success and return the file URL
-              const fileUrl = uploadUrl.split('?')[0]; // Get the base S3 URL without the presigned parameters
-              console.log('Upload successful. File URL:', fileUrl);
-          
-              return {
-                success: true,
-                fileUrl
-              };
-          
-            } catch (error) {
-              console.error('Error uploading logo:', error);
-              
-              const errorMessage = document.querySelector('#errorMessage');
-              errorMessage.textContent = `Upload failed: ${error.message}`;
-              
-              const progressBar = document.querySelector('.upload-progress-bar');
-              progressBar.style.width = '0%';
-              
-              return {
-                success: false,
-                error: error.message
-              };
-            }
-          }
-          
-          function uploadLogo() {
-            if (!isAuthenticated()) {
-              const errorMessage = document.querySelector('#errorMessage');
-              errorMessage.textContent = 'Please login to upload files';
-              return;
-            }
-          
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = 'image/*';
-            
-            fileInput.addEventListener('change', async (event) => {
-              const file = event.target.files[0];
-              if (!file) return;
-          
-              // Validate file type
-              if (!file.type.startsWith('image/')) {
-                const errorMessage = document.querySelector('#errorMessage');
-                errorMessage.textContent = 'Please select an image file';
-                return;
-              }
-          
-              // Validate file size (5MB)
-              const MAX_FILE_SIZE = 5 * 1024 * 1024;
-              if (file.size > MAX_FILE_SIZE) {
-                const errorMessage = document.querySelector('#errorMessage');
-                errorMessage.textContent = 'File size must be less than 5MB';
-                return;
-              }
-          
-              const progressBar = document.querySelector('.upload-progress-bar');
-              progressBar.style.width = '50%';
-          
-              // Add loading state
-              const uploadButton = document.querySelector('#uploadButton'); // Add id="uploadButton" to your upload button
-              if (uploadButton) {
-                uploadButton.disabled = true;
-                uploadButton.textContent = 'Uploading...';
-              }
-              
-              try {
-                const result = await handleLogoUpload(file);
-                
-                if (result.success) {
-                  // Handle successful upload
-                  const successMessage = document.querySelector('#errorMessage');
-                  successMessage.style.color = 'green';
-                  successMessage.textContent = 'File uploaded successfully!';
-                }
-              } finally {
-                // Reset button state
-                if (uploadButton) {
-                  uploadButton.disabled = false;
-                  uploadButton.textContent = 'Upload Logo';
-                }
-              }
-            });
-            
-            fileInput.click();
-          }
-          
-          // Helper to check the response structure
-          function debugResponse(response) {
-            console.log('Response Headers:', Array.from(response.headers.entries()));
-            console.log('Response Status:', response.status);
-            return response.text().then(text => {
-              try {
-                return JSON.parse(text);
-              } catch (e) {
-                console.log('Raw Response:', text);
-                throw new Error('Failed to parse response as JSON');
-              }
-            });
-          }
-          
-          // Add upload progress tracking
-          async function uploadLogoWithProgress() {
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = 'image/jpeg';
-            
-            fileInput.addEventListener('change', async (event) => {
-              const file = event.target.files[0];
-              if (!file) return;
-          
-              // Validate file type
-              if (!file.type.startsWith('image/jpeg')) {
-                const errorMessage = document.querySelector('#errorMessage');
-                errorMessage.textContent = 'Please select an image file.';
-                return;
-              }
-          
-              // Validate file size (e.g., 5MB limit)
-              const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-              if (file.size > MAX_FILE_SIZE) {
-                const errorMessage = document.querySelector('#errorMessage');
-                errorMessage.textContent = 'File size must be less than 5MB.';
-                return;
-              }
-          
-              const progressBar = document.querySelector('.upload-progress-bar');
-              progressBar.style.width = '50%';
-              
-              await handleLogoUpload(file);
-            });
-            
-            fileInput.click();
-          }
-          
-          // Debugging helper
-          function logUploadError(error, uploadUrl, file) {
-            console.error('Upload Error Details:');
-            console.error('Error:', error);
-            console.error('Presigned URL:', uploadUrl);
-            console.error('File details:', {
-              name: file.name,
-              type: file.type,
-              size: file.size
-            });
-          }
-
-        // Form handling
-        document.addEventListener('DOMContentLoaded', () => {
-            const jobForm = document.getElementById('jobPostForm');
-            const logoInput = document.getElementById('logoInput');
-            const previewImage = document.getElementById('previewImage');
-            const progressBar = document.querySelector('.upload-progress-bar');
-            const errorMessage = document.getElementById('errorMessage');
-            const skillInput = document.getElementById('skillInput');
-            const skillsContainer = document.getElementById('skillsContainer');
-            let uploadedFileName = null;
-            let skills = new Set();
-
-            // Logo preview and upload
-            logoInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        previewImage.src = e.target.result;
-                        previewImage.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                    uploadLogo(file);
-                }
-            });
-
-            async function uploadLogo(file) {
-                try {
-                    progressBar.style.width = '0%';
-                    errorMessage.textContent = '';
-                    progressBar.style.width = '30%';
-                    
-                    const uploadResult = await handleLogoUpload(file); // Await the upload response
-                    if (uploadResult.success) {
-                        const fileUrl = uploadResult.fileUrl;
-                        // Extract the key from the file URL (e.g., "job-logos/logo.png")
-                        uploadedFileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
-                        console.log('Uploaded file key:', uploadedFileName);
-                    } else {
-                        throw new Error('Failed to upload the logo');
-                    }
-                    
-                    progressBar.style.width = '100%';
-                    setTimeout(() => {
-                        progressBar.style.width = '0%';
-                    }, 1000);
-                } catch (error) {
-                    errorMessage.textContent = error.message;
-                    progressBar.style.width = '0%';
-                    previewImage.style.display = 'none';
-                }
+              console.log("Uploaded file key:", uploadedFileName);
+            } else {
+              throw new Error("Failed to upload the logo");
             }
 
-            // Skills handling
-            skillInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const skill = skillInput.value.trim();
-                    if (skill && !skills.has(skill)) {
-                        skills.add(skill);
-                        addSkillTag(skill);
-                        skillInput.value = '';
-                    }
-                }
-            });
+            progressBar.style.width = "100%";
+            setTimeout(() => {
+              progressBar.style.width = "0%";
+            }, 1000);
+          } catch (error) {
+            errorMessage.textContent = error.message;
+            progressBar.style.width = "0%";
+            previewImage.style.display = "none";
+          }
+        }
 
-            function addSkillTag(skill) {
-                const tag = document.createElement('div');
-                tag.className = 'skill-tag';
-                tag.innerHTML = `
+        // Skills handling
+        skillInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const skill = skillInput.value.trim();
+            if (skill && !skills.has(skill)) {
+              skills.add(skill);
+              addSkillTag(skill);
+              skillInput.value = "";
+            }
+          }
+        });
+
+        function addSkillTag(skill) {
+          const tag = document.createElement("div");
+          tag.className = "skill-tag";
+          tag.innerHTML = `
                     ${skill}
                     <button type="button" onclick="removeSkill(this, '${skill}')">&times;</button>
                 `;
-                skillsContainer.appendChild(tag);
-            }
-
-            window.removeSkill = function(button, skill) {
-                skills.delete(skill);
-                button.parentElement.remove();
-            };
-
-// Form submission
-jobForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    if (!uploadedFileName) {
-        alert('Please upload a company logo.');
-        return;
-    }
-
-    const locationInput = document.getElementById('location').value.trim();
-    const [city = '', state = '', country = ''] = locationInput.split(',').map(s => s.trim());
-
-    const formData = {
-        title: document.getElementById('jobTitle').value.trim(),
-        company: document.getElementById('companyName').value.trim(),
-        companyLogoKey: uploadedFileName,
-        description: document.getElementById('jobDescription').value.trim(),
-        requirements: document.getElementById('requirements').value.trim().split('\n').filter(req => req),
-        responsibilities: document.getElementById('responsibilities').value.trim().split('\n').filter(res => res),
-        salary: {
-            min: parseInt(document.getElementById('salaryMin').value) || 0,
-            max: parseInt(document.getElementById('salaryMax').value) || 0,
-            currency: document.getElementById('currency').value.trim()
-        },
-        location: {
-            city,
-            state,
-            country,
-            remote: document.getElementById('remote').checked
-        },
-        jobType: document.getElementById('jobType').value,
-        category: document.getElementById('category').value,
-        applicationDeadline: document.getElementById('deadline').value || null,
-        experienceLevel: document.getElementById('experience').value,
-        skills: Array.from(skills)
-    };
-
-    try {
-        const response = await fetch('http://localhost:8080/api/v1/employer/createjob', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify(formData)
-        });
-
-        if (!response.ok) {
-            throw new Error(await response.text());
+          skillsContainer.appendChild(tag);
         }
 
-        const result = await response.json();
-        alert('Job posted successfully!');
-        jobForm.reset();
-        previewImage.style.display = 'none';
-        skillsContainer.innerHTML = '';
-        skills.clear();
-        uploadedFileName = null;
+        window.removeSkill = function (button, skill) {
+          skills.delete(skill);
+          button.parentElement.remove();
+        };
 
-    } catch (error) {
-        console.error('Error creating job:', error);
-        alert('Failed to create job posting. Please try again.');
-    }
-});
-});
+        // Form submission
+        jobForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          if (!uploadedFileName) {
+            alert("Please upload a company logo.");
+            return;
+          }
+
+          const locationInput = document.getElementById("location")
+          const city = document.getElementById("locationCity").value.trim();
+          const state = document.getElementById("locationState").value.trim();
+          const country = document.getElementById("locationCountry").value.trim();
+          const  latitude = document.getElementById("latitude").value.trim();
+          const longitude = document.getElementById("longitude").value.trim();
+          const remote = document.getElementById("remote").checked;
+
+          if (!city && !state && !country && !remote) {
+            alert(
+              "Please provide at least one location detail or mark the job as remote."
+            );
+            return;
+          }
+          const salaryMin = parseInt(
+            document.getElementById("salaryMin").value
+          );
+          const salaryMax = parseInt(
+            document.getElementById("salaryMax").value
+          );
+
+          if (
+            isNaN(salaryMin) ||
+            isNaN(salaryMax) ||
+            salaryMin <= 0 ||
+            salaryMax <= 0 ||
+            salaryMin > salaryMax
+          ) {
+            alert("Please enter valid salary range (min and max) values.");
+            return;
+          }
+          const applicationDeadline = document
+            .getElementById("deadline")
+            .value.trim();
+          if (applicationDeadline && isNaN(Date.parse(applicationDeadline))) {
+            alert("Please enter a valid application deadline date.");
+            return;
+          }
+
+          const formData = {
+            title: document.getElementById("jobTitle").value.trim(),
+            company: document.getElementById("companyName").value.trim(),
+            companyLogoKey: uploadedFileName,
+            description: document.getElementById("jobDescription").value.trim(),
+            requirements: document
+              .getElementById("requirements")
+              .value.trim()
+              .split("\n")
+              .filter((req) => req),
+            responsibilities: document
+              .getElementById("responsibilities")
+              .value.trim()
+              .split("\n")
+              .filter((res) => res),
+            salary: {
+              min: salaryMin,
+              max: salaryMax,
+              currency:
+                document.getElementById("currency").value.trim() || "USD",
+            },
+            location: {
+              city,
+              state,
+              country,
+              coordinates: [longitude, latitude], 
+              remote,
+            },
+            jobType: document.getElementById("jobType").value,
+            category: document.getElementById("category").value,
+            applicationDeadline: applicationDeadline || null,
+            experienceLevel: document.getElementById("experience").value,
+            skills: Array.from(skills),
+          };
+
+          try {
+            const response = await fetch(
+              "http://localhost:8080/api/v1/employer/createjob",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify(formData),
+              }
+            );
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(errorText);
+            }
+
+            const result = await response.json();
+            alert("Job posted successfully!");
+            jobForm.reset();
+            previewImage.style.display = "none";
+            skillsContainer.innerHTML = "";
+            skills.clear();
+            uploadedFileName = null;
+          } catch (error) {
+            console.error("Error creating job:", error);
+            alert(`Failed to create job posting: ${error.message}`);
+          }
+        });
+      });
     </script>
-</body>
+  </body>
 </html>
