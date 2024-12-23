@@ -10,11 +10,20 @@ import {
 } from "react-native";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import MapView, { Marker, Circle } from "react-native-maps";
-import { getJobsInRadius } from "../../api/jobsapi";
+import { getJobsInRadius,
+  getDownloadPresignedUrl, 
+  downloadAndCacheLogo,
+  saveJob,
+  unsaveJob, 
+  isJobSaved, 
+  applyToJob, 
+  hasAppliedToJob 
+} from "../../api/jobsapi";
 import JobCard from "../../components/CompanyCard/index";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Location from "expo-location";
+import { Alert } from 'react-native';
 
 const RADIUS_KM = 20; // Configurable search radius
 const FETCH_THRESHOLD_KM = 10; // Only fetch if moved more than 10km
@@ -23,6 +32,9 @@ const JobsMapScreen = () => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
+  const [savedJobIds, setSavedJobIds] = useState([]);
+const [appliedJobIds, setAppliedJobIds] = useState([]);
+  const [logoCache, setLogoCache] = useState({});
   const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +48,41 @@ const JobsMapScreen = () => {
   const currentLocationRef = useRef(null);
   const lastFetchedLocationRef = useRef(null);
   const mapRef = useRef(null);
+
+  const getLogoUrl = useCallback(async (logoKey) => {
+  if (!logoKey) return { type: 'placeholder' };
+  
+  try {
+    if (logoCache[logoKey]) {
+      return { type: 'file', path: logoCache[logoKey] };
+    }
+
+    try {
+      const presignedUrl = await getDownloadPresignedUrl(logoKey, 'job-logo');
+      
+      // Log the presigned URL for debugging
+      console.log('Presigned URL:', presignedUrl);
+
+      const result = await downloadAndCacheLogo(presignedUrl, logoKey);
+      
+      if (result.type === 'file') {
+        setLogoCache(prev => ({
+          ...prev,
+          [logoKey]: result.path
+        }));
+      }
+
+      return result;
+    } catch (urlError) {
+      console.warn('Error getting presigned URL:', urlError);
+      return { type: 'placeholder' };
+    }
+  } catch (error) {
+    console.warn('Error getting logo URL:', error);
+    return { type: 'placeholder' };
+  }
+}, [logoCache]);
+
 
   const calculateDistance = (loc1, loc2) => {
     if (!loc1 || !loc2) return Infinity;
@@ -116,18 +163,21 @@ const JobsMapScreen = () => {
 
         // Ensure response.jobs exists and is an array
         const validJobs = (response?.jobs || [])
-          .filter((job) => job.location?.latitude && job.location?.longitude)
-          .map((job) => ({
-            ...job,
-            // Ensure all necessary properties exist
-            title: job.title || "Untitled Job",
-            company: job.company || "Unknown Company",
-            companyLogoUrl: job.companyLogoUrl || null,
-            location: {
-              latitude: job.location.latitude,
-              longitude: job.location.longitude,
-            },
-          }));
+        .filter((job) => job.location?.latitude && job.location?.longitude)
+        .map((job) => ({
+          ...job,
+          title: job.title || "Untitled Job",
+          company: job.company || "Unknown Company",
+          companyLogoKey: job.companyLogoKey, // Preserve logo key
+          location: {
+            latitude: job.location.latitude,
+            longitude: job.location.longitude,
+            city: job.location.city,
+            state: job.location.state,
+            country: job.location.country,
+            remote: job.location.remote
+          },
+        }));
 
         // Update last fetched location
         lastFetchedLocationRef.current = location;
@@ -155,6 +205,34 @@ const JobsMapScreen = () => {
 
   // Search location function
  
+  useEffect(() => {
+    const checkJobStatuses = async () => {
+      if (jobs.length > 0) {
+        try {
+          const savedPromises = jobs.map(job => isJobSaved(job._id));
+          const appliedPromises = jobs.map(job => hasAppliedToJob(job._id));
+  
+          const savedResults = await Promise.all(savedPromises);
+          const appliedResults = await Promise.all(appliedPromises);
+  
+          const savedIds = jobs
+            .filter((_, index) => savedResults[index])
+            .map(job => job._id);
+  
+          const appliedIds = jobs
+            .filter((_, index) => appliedResults[index])
+            .map(job => job._id);
+  
+          setSavedJobIds(savedIds);
+          setAppliedJobIds(appliedIds);
+        } catch (error) {
+          console.error('Error checking job statuses:', error);
+        }
+      }
+    };
+  
+    checkJobStatuses();
+  }, [jobs]);
 
   const searchLocation = async () => {
     // Check if search query is empty or just whitespace
@@ -264,6 +342,53 @@ const JobsMapScreen = () => {
 
     if (distance > FETCH_THRESHOLD_KM) {
       fetchJobsInRadius(newLocation);
+    }
+  };
+  const handleSave = async (job) => {
+    try {
+      await saveJob(job._id);
+      setSavedJobIds(prev => [...prev, job._id]);
+    } catch (error) {
+      console.error('Error saving job:', error);
+      Alert.alert('Error', 'Failed to save job');
+    }
+  };
+  
+  const handleUnsave = async (job) => {
+    try {
+      await unsaveJob(job._id);
+      setSavedJobIds(prev => prev.filter(id => id !== job._id));
+    } catch (error) {
+      console.error('Error unsaving job:', error);
+      Alert.alert('Error', 'Failed to unsave job');
+    }
+  };
+  
+  const handleApply = async (job) => {
+    try {
+      if (appliedJobIds.includes(job._id)) {
+        Alert.alert('Already Applied', 'You have already applied to this job.');
+        return;
+      }
+  
+      await applyToJob(job._id);
+      
+      setAppliedJobIds(prev => [...prev, job._id]);
+  
+      Alert.alert(
+        'Application Submitted',
+        'Your job application has been submitted successfully!'
+      );
+    } catch (error) {
+      if (error.message === 'Already applied for this job') {
+        setAppliedJobIds(prev => [...prev, job._id]);
+        Alert.alert('Already Applied', 'You have already applied to this job.');
+      } else {
+        Alert.alert(
+          'Application Failed',
+          error.message || 'Failed to submit job application. Please try again.'
+        );
+      }
     }
   };
 
@@ -380,41 +505,48 @@ const JobsMapScreen = () => {
         {renderMarkers}
       </MapView>
 
-        {selectedJob && (
-          <View style={styles.cardOverlay}>
-            <View style={styles.cardHeader}>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setSelectedJob(null)}
-              >
-                <AntDesign name="closecircleo" size={24} color="black" />
-              </TouchableOpacity>
-            </View>
-            <JobCard
-              job={{
-                ...selectedJob,
-                // Ensure all required properties exist
-                company: selectedJob.company || "Unknown Company",
-                title: selectedJob.title || "Untitled Job",
-                description:
-                  selectedJob.description || "No description available",
-                companyLogoUrl: selectedJob.companyLogoUrl || null,
-                skills: selectedJob.skills || [],
-                location: selectedJob.location || null,
-              }}
-              logoUrl={selectedJob.companyLogoUrl || null}
-              onSave={() => {
-                /* Implement save logic */
-              }}
-              onUnsave={() => {
-                /* Implement unsave logic */
-              }}
-              onApply={() => {
-                /* Implement apply logic */
-              }}
-            />
-          </View>
-        )}
+      {selectedJob && (
+    <View style={styles.cardOverlay}>
+      <View style={styles.cardHeader}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => setSelectedJob(null)}
+        >
+          <AntDesign name="closecircleo" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+      <JobCard
+        job={{
+          _id: selectedJob._id,
+          title: selectedJob.title || "Untitled Job",
+          company: selectedJob.company || "Unknown Company",
+          description: selectedJob.description || "No description available",
+          jobType: selectedJob.jobType,
+          salary: selectedJob.salary,
+          location: {
+            latitude: selectedJob.location?.coordinates?.[1],
+            longitude: selectedJob.location?.coordinates?.[0],
+            city: selectedJob.location?.city,
+            state: selectedJob.location?.state,
+            country: selectedJob.location?.country,
+            remote: selectedJob.location?.remote
+          },
+          logoKey: selectedJob.companyLogoKey,
+          skills: selectedJob.skills || [],
+          applicationDeadline: selectedJob.applicationDeadline,
+          experienceLevel: selectedJob.experienceLevel,
+          requirements: selectedJob.requirements,
+          responsibilities: selectedJob.responsibilities,
+          isSaved: savedJobIds.includes(selectedJob._id),
+          hasApplied: appliedJobIds.includes(selectedJob._id)
+        }}
+        getLogoUrl={getLogoUrl}
+        onSave={() => handleSave(selectedJob)}
+        onUnsave={() => handleUnsave(selectedJob)}
+        onApply={() => handleApply(selectedJob)}
+      />
+    </View>
+  )}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -519,7 +651,7 @@ const styles = StyleSheet.create({
   currentLocationButton: {
     position: 'absolute',
     bottom: 10, // Adjust this value based on your layout
-    right: 10,
+    left: 20,
     backgroundColor: 'white',
     borderRadius: 40, // Make it more circular
     width: 50, // Explicit width

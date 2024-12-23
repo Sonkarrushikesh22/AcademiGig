@@ -4,16 +4,13 @@ import LargeCard from './expandedJobcardf';
 
 const JobCard = ({ job, onSave, onUnsave, onApply, getLogoUrl }) => {
   const [isPopupVisible, setPopupVisible] = useState(false);
-  const [isSaved, setIsSaved] = useState(job.isSaved || false);
 
   const handleSave = async () => {
     try {
-      if (isSaved) {
+      if (job.isSaved) {
         await onUnsave(job);
-        setIsSaved(false);
       } else {
         await onSave(job);
-        setIsSaved(true);
       }
     } catch (error) {
       console.error('Error toggling save status:', error);
@@ -31,7 +28,7 @@ const JobCard = ({ job, onSave, onUnsave, onApply, getLogoUrl }) => {
         onPress={handleCardPress}
         onSave={handleSave}
         getLogoUrl={getLogoUrl}
-        isSaved={isSaved}
+        isSaved={job.isSaved}
       />
       <LargeCard
         job={job}
@@ -39,7 +36,7 @@ const JobCard = ({ job, onSave, onUnsave, onApply, getLogoUrl }) => {
         onApply={onApply}
         onSave={handleSave}
         getLogoUrl={getLogoUrl}
-        isSaved={isSaved}
+        isSaved={job.isSaved}
         visible={isPopupVisible}
       />
     </>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, FlatList, ActivityIndicator, Text, StyleSheet,Alert } from 'react-native';
+import { View, FlatList, ActivityIndicator, Text, StyleSheet,Alert,  } from 'react-native';
 import JobCard from './index';
 import {
   getJobs,
@@ -10,8 +10,10 @@ import {
   downloadAndCacheLogo,
   applyToJob,
   hasAppliedToJob,
-  getAppliedJobs
+  getAppliedJobs,
+  getSavedJobs
 } from '../../api/jobsapi';
+
 
 const JobsList = () => {
   const [jobs, setJobs] = useState([]);
@@ -23,6 +25,7 @@ const JobsList = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [appliedJobs, setAppliedJobs] = useState(new Set());
+  const [savedJobIds, setSavedJobIds] = useState(new Set());
 
 
   // Load applied jobs
@@ -36,17 +39,37 @@ const JobsList = () => {
     }
   }, []);
 
+  const loadSavedJobs = useCallback(async () => {
+    try {
+      const savedJobs = await getSavedJobs();
+      const savedIds = new Set(savedJobs.map(job => job._id));
+      setSavedJobIds(savedIds);
+      
+      // Update existing jobs with correct saved status
+      setJobs(prevJobs =>
+        prevJobs.map(job => ({
+          ...job,
+          isSaved: savedIds.has(job._id)
+        }))
+      );
+    } catch (error) {
+      console.error('Error loading saved jobs:', error);
+    }
+  }, []);
+
+
   // Update initial useEffect to include loadAppliedJobs
   useEffect(() => {
     const initializeData = async () => {
       await Promise.all([
         fetchJobs(1),
-        loadAppliedJobs()
+        loadAppliedJobs(),
+        loadSavedJobs()
       ]);
     };
     
     initializeData();
-  }, [fetchJobs, loadAppliedJobs]);
+  }, [fetchJobs, loadAppliedJobs, loadSavedJobs]);
 
 
   // Transform job data to match component expectations
@@ -205,43 +228,73 @@ const JobsList = () => {
   // Handle saving/unsaving jobs
   const handleSave = async (job) => {
     try {
-      await saveJob(job._id);
+      // Optimistically update UI
       setJobs(prevJobs =>
         prevJobs.map(j =>
           j._id === job._id ? { ...j, isSaved: true } : j
         )
       );
+      setSavedJobIds(prev => new Set([...prev, job._id]));
+  
+      // Make API call
+      await saveJob(job._id);
     } catch (error) {
-      console.error('Error saving job:', error);
-    }
-  };
-
-  const handleUnsave = async (job) => {
-    try {
-      await unsaveJob(job._id);
+      // Revert UI changes on error
       setJobs(prevJobs =>
         prevJobs.map(j =>
           j._id === job._id ? { ...j, isSaved: false } : j
         )
       );
-    } catch (error) {
-      console.error('Error unsaving job:', error);
+      setSavedJobIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(job._id);
+        return newSet;
+      });
+      console.error('Error saving job:', error);
+      Alert.alert('Error', 'Failed to save job. Please try again.');
     }
   };
-
- 
-
+  
+  const handleUnsave = async (job) => {
+    try {
+      // Optimistically update UI
+      setJobs(prevJobs =>
+        prevJobs.map(j =>
+          j._id === job._id ? { ...j, isSaved: false } : j
+        )
+      );
+      setSavedJobIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(job._id);
+        return newSet;
+      });
+  
+      // Make API call
+      await unsaveJob(job._id);
+    } catch (error) {
+      // Revert UI changes on error
+      setJobs(prevJobs =>
+        prevJobs.map(j =>
+          j._id === job._id ? { ...j, isSaved: true } : j
+        )
+      );
+      setSavedJobIds(prev => new Set([...prev, job._id]));
+      console.error('Error unsaving job:', error);
+      Alert.alert('Error', 'Failed to unsave job. Please try again.');
+    }
+  };
   // Handle pull-to-refresh
   const handleRefresh = async () => {
     setRefreshing(true);
     setPage(1);
     await Promise.all([
       fetchJobs(1, true),
-      loadAppliedJobs()
+      loadAppliedJobs(),
+      loadSavedJobs()
     ]);
     setRefreshing(false);
   };
-
+  
   // Load more jobs when reaching the end
   const handleLoadMore = useCallback(() => {
     if (!loading && !isLoadingMore && hasMore) {

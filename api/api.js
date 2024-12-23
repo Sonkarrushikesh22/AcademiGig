@@ -18,7 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //   }
 // };
 
-const getBaseURL = () => 'https://c522-115-98-232-116.ngrok-free.app/api/v1';
+const getBaseURL = () => 'https://961e-115-98-234-91.ngrok-free.app/api/v1';
 
 const API = axios.create({
   baseURL: getBaseURL(),

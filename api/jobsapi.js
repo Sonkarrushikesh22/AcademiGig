@@ -686,7 +686,7 @@ export const getJobsInRadius = async ({ latitude, longitude, radius = 50, page =
       page: page.toString(),
       limit: limit.toString()
     };
-    
+
     const response = await API.get('/job/get-job-in-radius', { params });
     const data = response.data;
 
@@ -697,9 +697,15 @@ export const getJobsInRadius = async ({ latitude, longitude, radius = 50, page =
     return {
       jobs: data.jobs.map(job => ({
         ...job,
+        companyLogoKey: job.companyLogoKey,
         location: {
-          latitude: job.coordinate.latitude,
-          longitude: job.coordinate.longitude
+          latitude: job.location.latitude,
+          longitude: job.location.longitude,
+          city: job.location.city,
+          state: job.location.state,
+          country: job.location.country,
+          remote: job.location.remote,
+          coordinates: job.location.coordinates
         }
       })),
       total: data.total,
