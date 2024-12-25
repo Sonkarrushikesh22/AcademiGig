@@ -27,7 +27,7 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
     experienceLevels: ['Entry', 'Mid', 'Senior']
   };
 
-
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterOptions, setFilterOptions] = useState(defaultFilterOptions);
@@ -80,8 +80,32 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
 
   const handleApplyFilters = async () => {
     try {
-      // Create clean filters object removing empty/default values
-      const cleanFilters = Object.entries(filters).reduce((acc, [key, value]) => {
+      if (!hasUnsavedChanges) {
+        onClose();
+        return;
+      }
+      
+      const defaultState = {
+        category: 'all',
+        jobType: 'all',
+        experienceLevel: 'all',
+        minSalary: 0,
+        maxSalary: 200000,
+        currency: 'USD',
+        city: '',
+        state: '',
+        country: '',
+        isRemote: false,
+        skills: [],
+        page: 1,
+        limit: 10,
+        sortBy: 'postedDate',
+        sortOrder: 'desc'
+      };
+      
+      const isReset = Object.entries(filters).every(([key, value]) => defaultState[key] === value);
+      
+      const cleanFilters = isReset ? {} : Object.entries(filters).reduce((acc, [key, value]) => {
         if (
           value !== 'all' && 
           value !== '' && 
@@ -94,16 +118,9 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
         return acc;
       }, {});
   
-      // Ensure these parameters are always included
-      cleanFilters.page = 1;
-      cleanFilters.limit = 10;
-      
-      // Add search parameter if exists
-      if (params.search) {
+      if (params?.search) {
         cleanFilters.search = params.search;
       }
-  
-      console.log('Applying filters:', cleanFilters);
   
       if (onApplyFilters) {
         onApplyFilters(cleanFilters);
@@ -115,8 +132,13 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
     }
   };
   
+  
+  useEffect(() => {
+    setHasUnsavedChanges(true);
+  }, [filters]);
+  
   const resetFilters = () => {
-    setFilters({
+    const defaultFilters = {
       category: 'all',
       jobType: 'all',
       experienceLevel: 'all',
@@ -132,7 +154,9 @@ const SearchFilter = ({ initialFilters = {}, onApplyFilters, onClose }) => {
       limit: 10,
       sortBy: 'postedDate',
       sortOrder: 'desc'
-    });
+    };
+    setFilters(defaultFilters);
+    setHasUnsavedChanges(false);
   };
 
   const handleAddSkill = (skill) => {

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useEffect } from "react";
 import { View, TextInput, StyleSheet, Modal, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,51 +12,8 @@ const SearchInput = ({ onSearchResults, initialSearch = '', showFilterButton = t
   const [searchText, setSearchText] = useState(initialSearch);
   const [isLoading, setIsLoading] = useState(false);
   const [currentFilters, setCurrentFilters] = useState({});
+  const [lastAppliedFilters, setLastAppliedFilters] = useState({});
 
-  // Clean filters by removing empty/default values
-
-
-  const handleSearch = useCallback(() => {
-    setIsLoading(true);
-    try {
-      const searchParam = searchText.trim();
-      // Always include search parameter if it exists
-      const baseFilters = {
-        search: searchParam || '',
-        page: 1,
-        limit: 10,
-        sortBy: 'postedDate',
-        sortOrder: 'desc'
-      };
-
-      // Merge with current filters if they exist
-      const cleanedFilters = cleanFilters({
-        ...baseFilters,
-        ...currentFilters
-      });
-  
-      console.log('SearchInput sending filters:', cleanedFilters);
-  
-      if (onSearchResults) {
-        onSearchResults(cleanedFilters);
-      } else {
-        // If no onSearchResults prop, navigate to search page
-        const queryParams = new URLSearchParams();
-        Object.entries(cleanedFilters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== '') {
-            queryParams.append(key, value.toString());
-          }
-        });
-        router.push(`/search?${queryParams.toString()}`);
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchText, currentFilters, onSearchResults, router]);
-  
-  // Additional check needed in cleanFilters:
   const cleanFilters = (filters) => {
     const cleaned = {};
     Object.entries(filters).forEach(([key, value]) => {
@@ -71,30 +26,74 @@ const SearchInput = ({ onSearchResults, initialSearch = '', showFilterButton = t
         !(key === 'minSalary' && value === 0) &&
         !(key === 'maxSalary' && value === 200000)
       ) {
-        // Convert boolean values to strings for URL compatibility
         cleaned[key] = typeof value === 'boolean' ? value.toString() : value;
       }
     });
     return cleaned;
   };
 
+  const handleSearch = useCallback(() => {
+    setIsLoading(true);
+    try {
+      const searchParam = searchText.trim();
+      const baseFilters = {
+        search: searchParam || '',
+        page: 1,
+        limit: 10,
+        sortBy: 'postedDate',
+        sortOrder: 'desc'
+      };
+
+      const cleanedFilters = cleanFilters({
+        ...baseFilters,
+        ...currentFilters
+      });
+  
+      console.log('SearchInput sending filters:', cleanedFilters);
+  
+      if (onSearchResults) {
+        onSearchResults(cleanedFilters);
+      } else {
+        const queryParams = new URLSearchParams();
+        Object.entries(cleanedFilters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            queryParams.append(key, value.toString());
+          }
+        });
+        router.push(`/search?${queryParams.toString()}`);
+      }
+      
+      // Store the applied filters
+      setLastAppliedFilters(currentFilters);
+      // Reset current filters after search
+      setCurrentFilters({});
+      
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchText, currentFilters, onSearchResults, router]);
+
   const handleApplyFilters = useCallback((filters) => {
-    const cleanedFilters = cleanFilters(filters);
-    setCurrentFilters(cleanedFilters);
+    if (Object.keys(filters).length === 0) {
+      setCurrentFilters({});
+      setLastAppliedFilters({});
+    } else {
+      const cleanedFilters = cleanFilters(filters);
+      if (onSearchResults) {
+        onSearchResults(filters);
+      }
+    }
     setShowFilterForm(false);
+  }, [onSearchResults]);
 
-    // Combine with search if exists
-    const searchParam = searchText.trim();
-    if (searchParam) {
-      cleanedFilters.search = searchParam;
-    }
+  // When opening filter form, restore last applied filters
+  const handleOpenFilter = () => {
+    setCurrentFilters(lastAppliedFilters);
+    setShowFilterForm(true);
+  };
 
-    if (onSearchResults) {
-      onSearchResults(cleanedFilters);
-    }
-  }, [searchText, onSearchResults]);
-
-  // Sync with URL params on mount
   useEffect(() => {
     if (params) {
       const initialFilters = {};
@@ -104,6 +103,7 @@ const SearchInput = ({ onSearchResults, initialSearch = '', showFilterButton = t
         }
       });
       setCurrentFilters(cleanFilters(initialFilters));
+      setLastAppliedFilters(cleanFilters(initialFilters));
       if (params.search) {
         setSearchText(params.search);
       }
@@ -137,13 +137,13 @@ const SearchInput = ({ onSearchResults, initialSearch = '', showFilterButton = t
         {showFilterButton && (
           <TouchableOpacity 
             style={styles.filterIcon} 
-            onPress={() => setShowFilterForm(true)}
+            onPress={handleOpenFilter}
             activeOpacity={0.7}
           >
             <MaterialCommunityIcons 
               name="tune-variant" 
               size={20} 
-              color={Object.keys(currentFilters).length > 0 ? "#007AFF" : "black"} 
+              color={Object.keys(lastAppliedFilters).length > 0 ? "#007AFF" : "black"} 
             />
           </TouchableOpacity>
         )}
@@ -168,7 +168,6 @@ const SearchInput = ({ onSearchResults, initialSearch = '', showFilterButton = t
   );
 };
 
-// Styles remain the same
 const styles = StyleSheet.create({
   container: {
     marginTop: 10,
