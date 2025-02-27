@@ -68,7 +68,6 @@ const getAppliedJobs = async (req, res) => {
     const applications = await Application.find({ user: userId })
       .populate({
         path: 'job',
-        //select: 'title company description category jobType experienceLevel location companyLogoUrl  companyLogoKey salary postedDate'
       })
       .sort({ createdAt: -1 }) // Sort by newest first
       .lean();

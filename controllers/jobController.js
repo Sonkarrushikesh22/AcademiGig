@@ -82,36 +82,36 @@ exports.getAllJobs = async (req, res) => {
 };
 
  
-// exports.getJobDetails = async (req, res) => {
-//   try {
-//     const { id } = req.params; // Extract job ID from request parameters
+exports.getJobDetails = async (req, res) => {
+  try {
+    const { id } = req.params; // Extract job ID from request parameters
 
-//     // Fetch job by ID
-//     const job = await Job.findById(id).populate('employers', 'name email');
+    // Fetch job by ID
+    const job = await Job.findById(id).populate('employers', 'name email');
 
-//     if (!job) {
-//       return res.status(404).json({ success: false, message: 'Job not found' });
-//     }
+    if (!job) {
+      return res.status(404).json({ success: false, message: 'Job not found' });
+    }
 
-//     // Fetch presigned URL for company logo if it exists
-//     let companyLogoUrl = null;
-//     if (job.companyLogoKey) {
-//       companyLogoUrl = await s3Service.getObjectURL(job.companyLogoKey);
-//     }
+    // Fetch presigned URL for company logo if it exists
+    let companyLogoUrl = null;
+    if (job.companyLogoKey) {
+      companyLogoUrl = await s3Service.getObjectURL(job.companyLogoKey);
+    }
 
-//     // Return job details along with logo URL
-//     res.status(200).json({
-//       success: true,
-//       job: { ...job.toObject(), companyLogoUrl },
-//     });
-//   } catch (error) {
-//     console.error('Error fetching job details:', error);
-//     res.status(500).json({
-//       success: false,
-//       message: 'Failed to fetch job details.',
-//     });
-//   }
-// };
+    // Return job details along with logo URL
+    res.status(200).json({
+      success: true,
+      job: { ...job.toObject(), companyLogoUrl },
+    });
+  } catch (error) {
+    console.error('Error fetching job details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch job details.',
+    });
+  }
+};
 
 
 exports.getDownloadPresignedUrl = async (req, res) => {
@@ -531,10 +531,30 @@ exports.getJobsInRadius = async (req, res) => {
           _id: 1,
           title: 1,
           company: 1,
-          location: 1,
+          description: 1,
+          requirements: 1,
+          responsibilities: 1,
           salary: 1,
+          location: {
+            type: '$location.type',
+            coordinates: '$location.coordinates',
+            city: '$location.city',
+            state: '$location.state',
+            country: '$location.country',
+            remote: '$location.remote',
+            // Add computed coordinate fields for frontend compatibility
+            latitude: { $arrayElemAt: ['$location.coordinates', 1] },
+            longitude: { $arrayElemAt: ['$location.coordinates', 0] }
+          },
+          jobType: 1,
+          category: 1,
+          postedDate: 1,
+          applicationDeadline: 1,
+          skills: 1,
+          experienceLevel: 1,
+          employers: 1,
+          companyLogoKey: 1,
           distance: 1,
-          coordinates: '$location.coordinates',
           distanceText: {
             $concat: [{ $toString: { $round: ['$distance', 1] } }, ' km away']
           }
@@ -547,19 +567,30 @@ exports.getJobsInRadius = async (req, res) => {
       Job.aggregate([...pipeline.slice(0, 1), { $count: 'total' }])
     ]);
 
-    // Format the response to be more map-friendly
-    const formattedJobs = jobs.map(job => ({
-      id: job._id.toString(),
-      title: job.title,
-      company: job.company,
-      coordinate: {
-        latitude: job.coordinates[1],
-        longitude: job.coordinates[0]
-      },
-      distance: job.distance,
-      distanceText: job.distanceText,
-      salary: job.salary
-    }));
+    // Add presigned URLs for company logos
+    const jobsWithLogos = await Promise.all(
+      jobs.map(async (job) => {
+        let companyLogoUrl = null;
+        if (job.companyLogoKey) {
+          companyLogoUrl = await s3Service.getObjectURL(job.companyLogoKey);
+        }
+        return {
+          ...job,
+          id: job._id.toString(),
+          companyLogoUrl,
+          // Ensure location structure is complete
+          location: {
+            latitude: job.location.latitude,
+            longitude: job.location.longitude,
+            city: job.location.city,
+            state: job.location.state,
+            country: job.location.country,
+            remote: job.location.remote,
+            coordinates: job.location.coordinates
+          }
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
@@ -571,7 +602,7 @@ exports.getJobsInRadius = async (req, res) => {
         longitude: parseFloat(longitude),
         radiusKm: parseFloat(radius)
       },
-      jobs: formattedJobs
+      jobs: jobsWithLogos
     });
   } catch (error) {
     console.error('Error fetching jobs by location:', error);

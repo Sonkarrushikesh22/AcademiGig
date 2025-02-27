@@ -23,7 +23,6 @@ async function getObjectURL(key, expiresIn = 3600) {
     const command = new GetObjectCommand({
       Bucket: process.env.BUCKET_NAME,
       Key: key,
-      
     });
     return await getSignedUrl(s3Client, command, { expiresIn });
   } catch (error) {
