@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Keyboard, View, StyleSheet } from 'react-native';
+import { Keyboard, View, StyleSheet, Platform } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 
@@ -27,7 +27,7 @@ const TabsLayout = () => {
         tabBarShowLabel: false,
         tabBarStyle: [
           styles.tabBarStyle,
-          isKeyboardVisible && styles.hiddenTabBar, // Apply margin adjustment dynamically
+          isKeyboardVisible && styles.hiddenTabBar,
         ],
       }}
     >
@@ -38,6 +38,7 @@ const TabsLayout = () => {
           title: 'Home',
           tabBarHideOnKeyboard: true,
           tabBarIcon: ({ color }) => <FontAwesome size={30} name="home" color={color} />,
+         // tabBarItemStyle: styles.tabBarItemStyle,
         }}
       />
       <Tabs.Screen
@@ -47,7 +48,8 @@ const TabsLayout = () => {
           headerShown: false,
           tabBarHideOnKeyboard: true,
           tabBarIcon: ({ color }) => <FontAwesome size={30} name="compass" color={color} />,
-                  }}
+         // tabBarItemStyle: styles.tabBarItemStyle,
+        }}
       />
       <Tabs.Screen
         name="saved"
@@ -55,6 +57,7 @@ const TabsLayout = () => {
           title: 'Saved',
           headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={30} name="bookmark" color={color} />,
+          //tabBarItemStyle: styles.tabBarItemStyle,
         }}
       />
       <Tabs.Screen
@@ -63,6 +66,7 @@ const TabsLayout = () => {
           title: 'Profile',
           headerShown: false,
           tabBarIcon: ({ color }) => <FontAwesome size={30} name="user" color={color} />,
+          //tabBarItemStyle: styles.tabBarItemStyle,
         }}
       />
     </Tabs>
@@ -73,14 +77,31 @@ const styles = StyleSheet.create({
   tabBarStyle: {
     position: 'absolute',
     height: 70,
-    alignItems: 'center',
     borderRadius: 35,
     marginHorizontal: 15,
     marginBottom: 15,
     backgroundColor: 'white',
+    ...Platform.select({
+      ios: {
+        paddingBottom: 0,
+      },
+      android: {
+        paddingTop: 0,
+        justifyContent: 'center',
+      },
+    }),
   },
+  // tabBarItemStyle: {
+  //   ...Platform.select({
+  //     ios: {
+  //     },
+  //     android: {
+  //      // paddingBottom: 5,
+  //     },
+  //   }),
+  // },
   hiddenTabBar: {
-    marginBottom: -70, // Shift the tab bar out of view when the keyboard is open
+    marginBottom: -70,
   },
 });
 

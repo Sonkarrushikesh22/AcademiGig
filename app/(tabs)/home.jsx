@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet,Platform  } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -81,7 +81,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-  marginBottom: -20,
+    marginBottom: -20,
+    ...Platform.select({
+      ios: {
+        paddingBottom: 0,
+        marginBottom:-30
+      }
+    }),
+
   },
   headerContainer: {
     flexDirection: "row",

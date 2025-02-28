@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Alert, StatusBar, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
@@ -136,7 +136,6 @@ const JobsByCategory = () => {
     }
   };
 
-  // Add isJobSaved to imports
   const handleSave = async (job) => {
     try {
       await saveJob(job._id);
@@ -238,36 +237,44 @@ const JobsByCategory = () => {
 
   if (!category || !categoryKey) {
     return (
-      <SafeAreaView>
+      <SafeAreaView style={{ flex: 1 }}>
         <Text>Error: Missing category or categoryKey</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={{ padding: 15 }}>
+
+      <View style>
+      <StatusBar barStyle={Platform.OS === 'ios' ? 'dark-content' : 'dark-content'} />
         {loading && jobs.length === 0 ? (
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color="#007BFF" style={{ flex: 1, justifyContent: 'center' }} />
         ) : (
           <FlatList
+            showsVerticalScrollIndicator={false}
             data={jobs}
             renderItem={renderJobItem}
             keyExtractor={item => item._id}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.1}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
             ListEmptyComponent={
-              <Text style={{ textAlign: 'center', marginTop: 50 }}>
-                No jobs found in this category
-              </Text>
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, marginTop: 50 }}>
+                <Text style={{ textAlign: 'center', color: '#6B7280', fontSize: 16 }}>
+                  No jobs found in this category
+                </Text>
+              </View>
             }
             contentContainerStyle={{
-              paddingBottom: 95, 
+              paddingBottom: 20,
+              paddingTop: 8,
+              paddingHorizontal:15,
             }}
           />
         )}
       </View>
-    </SafeAreaView>
+      // </View>
+    // </SafeAreaView>
   );
 };
 

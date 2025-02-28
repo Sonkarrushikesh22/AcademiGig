@@ -8,6 +8,9 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Platform,
+  SafeAreaView,
+  StatusBar
 } from 'react-native';
 import JobCard from '../../components/CompanyCard/index';
 import { 
@@ -119,20 +122,6 @@ const Saved = () => {
     initializeData();
   }, []); 
 
-  // Handle search
-  // const handleSearch = useCallback((text) => {
-  //   setSearchQuery(text);
-  //   if (text) {
-  //     const filtered = savedJobs.filter((job) =>
-  //       job.title.toLowerCase().includes(text.toLowerCase()) ||
-  //       job.company.toLowerCase().includes(text.toLowerCase())
-  //     );
-  //     setFilteredJobs(filtered);
-  //   } else {
-  //     setFilteredJobs(savedJobs);
-  //   }
-  // }, [savedJobs]);
-
   // Handle logo URL caching
   const getLogoUrl = useCallback(async (logoKey) => {
     if (!logoKey) return { type: 'placeholder' };
@@ -226,68 +215,86 @@ const Saved = () => {
 
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <CustomHeader title="Saved"/>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle={Platform.OS === 'ios' ? 'dark-content' : 'dark-content'} />
+      <View style={styles.container}>
+        <CustomHeader title="Saved"/>
 
-
-      {loading && !refreshing ? (
-        <ActivityIndicator style={styles.loader} size="large" color="#007BFF" />
-      ) : (
-        <FlatList  showsVerticalScrollIndicator={false}
-          data={filteredJobs}
-          renderItem={({ item }) => (
-            <JobCard
-              key={item._id}
-              job={item}
-              onSave={() => {}} // Empty function since job is already saved
-              onUnsave={handleUnsave}
-              onApply={handleApply}
-              getLogoUrl={getLogoUrl}
-            />
-          )}
-          keyExtractor={item => item._id}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={['#007BFF']}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                {searchQuery 
-                  ? 'No saved jobs match your search'
-                  : 'No saved jobs yet'}
-              </Text>
-            </View>
-          }
-          contentContainerStyle={{
-            paddingBottom: 95, // Always add padding
-          }}
-        />
-      )}
-    </View>
+        {loading && !refreshing ? (
+          <ActivityIndicator style={styles.loader} size="large" color="#007BFF" />
+        ) : (
+          <FlatList  
+            showsVerticalScrollIndicator={false}
+            data={filteredJobs}
+            renderItem={({ item }) => (
+              <JobCard
+                key={item._id}
+                job={item}
+                onSave={() => {}} // Empty function since job is already saved
+                onUnsave={handleUnsave}
+                onApply={handleApply}
+                getLogoUrl={getLogoUrl}
+              />
+            )}
+            keyExtractor={item => item._id}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#007BFF']}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  {searchQuery 
+                    ? 'No saved jobs match your search'
+                    : 'No saved jobs yet'}
+                </Text>
+              </View>
+            }
+            contentContainerStyle={{
+              paddingBottom: 95, // Always add padding
+            }}
+          />
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    //backgroundColor: '#fff',
+    // Platform specific styling for the safe area
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
-    paddingHorizontal:15,
+    paddingHorizontal: 15,
+    ...Platform.select({
+      ios: {
+        marginBottom:-30
+      },
+    }),
+
   },
   headerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
-    marginTop:20,
+    // Platform specific margin for header
+    //marginTop: Platform.OS === 'ios' ? 0 : 0,
     borderBottomColor: '#E5E7EB',
   },
   headerTitle: {
@@ -299,7 +306,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-
   },
   centerContainer: {
     flex: 1,

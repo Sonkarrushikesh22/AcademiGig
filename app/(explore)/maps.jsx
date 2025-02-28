@@ -7,6 +7,7 @@ import {
   TouchableWithoutFeedback,
   ActivityIndicator,
   TextInput,
+  Platform
 } from "react-native";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import MapView, { Marker, Circle } from "react-native-maps";
@@ -506,16 +507,16 @@ const [appliedJobIds, setAppliedJobIds] = useState([]);
       </MapView>
 
       {selectedJob && (
-    <View style={styles.cardOverlay}>
-      <View style={styles.cardHeader}>
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={() => setSelectedJob(null)}
-        >
-          <AntDesign name="closecircleo" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
-      <JobCard
+  <View style={styles.cardOverlay}>
+    <View style={styles.cardHeader}>
+      <TouchableOpacity
+        style={styles.closeButton}
+        onPress={() => setSelectedJob(null)}
+      >
+        <AntDesign name="closecircleo" size={24} color="black" />
+      </TouchableOpacity>
+    </View>
+    <JobCard
         job={{
           _id: selectedJob._id,
           title: selectedJob.title || "Untitled Job",
@@ -545,8 +546,8 @@ const [appliedJobIds, setAppliedJobIds] = useState([]);
         onUnsave={() => handleUnsave(selectedJob)}
         onApply={() => handleApply(selectedJob)}
       />
-    </View>
-  )}
+  </View>
+)}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -627,11 +628,13 @@ const styles = StyleSheet.create({
   searchContainer: {
     position: 'absolute',
     top: 20,
-    left: 20,
+    left: 80, // Space for location button
     right: 20,
     flexDirection: 'row',
     zIndex: 1,
   },
+  
+  
   searchInput: {
     flex: 1,
     backgroundColor: 'white',
@@ -639,7 +642,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     marginRight: 10,
-    elevation: 3,
+    // Platform-specific shadow handling
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   searchButton: {
     backgroundColor: '#007AFF',
@@ -647,24 +661,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 15,
+    height: 50, // Match the height of location button
   },
+  
   currentLocationButton: {
     position: 'absolute',
-    bottom: 10, // Adjust this value based on your layout
+    top: 20,
     left: 20,
     backgroundColor: 'white',
-    borderRadius: 40, // Make it more circular
-    width: 50, // Explicit width
-    height: 50, // Explicit height
+    borderRadius: 10,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5, // Increased elevation for shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    zIndex: 10, // Ensure it's above other elements
-  },
+    zIndex: 10, // Add zIndex for all platforms
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 10, // Increase elevation even more
+      },
+    }),
+  }
+  
 });
 
 export default JobsMapScreen;

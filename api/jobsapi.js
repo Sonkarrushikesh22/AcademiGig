@@ -677,6 +677,7 @@ export const createDebouncedFilter = (callback, delay = 300) => {
   };
 };
 
+
 export const getJobsInRadius = async ({ latitude, longitude, radius = 50, page = 1, limit = 10 }) => {
   try {
     const params = {

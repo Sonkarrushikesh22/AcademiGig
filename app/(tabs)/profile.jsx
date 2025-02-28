@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Alert,Text,TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert,Text,TouchableOpacity,  Platform} from 'react-native';
 import ProfileHeader from '../../components/Profile/Profileheader';
 import { CompletionBanner, ProfileSection } from '../../components/Profile/profileSection';
 import { BasicInfoForm, AboutForm, SkillsForm, ExperienceForm, ResumeUploadForm } from '../../components/Profile/profileForm';
@@ -192,18 +192,19 @@ return (
   <View style={styles.mainContainer}>
   {/* Sticky Header */}
   <View style={styles.headerContainer}>
-    <View style={styles.headerContent}>
-      <View style={styles.headerTextContainer}>
-        <Text style={styles.headerText}>Profile</Text>
-      </View>
-      <TouchableOpacity
-        onPress={() => router.push('/(DrawerScreens)/menu')}
-        style={styles.menuButton}
-      >
-        <Ionicons name="menu" size={24} color="#000000" />
-      </TouchableOpacity>
-    </View>
+  <View style={styles.headerContent}>
+    {/* The title is absolutely positioned in the center */}
+    <Text style={styles.headerText}>Profile</Text>
+    
+    {/* Menu Button on right */}
+    <TouchableOpacity
+      onPress={() => router.push('/(DrawerScreens)/menu')}
+      style={styles.menuButton}
+    >
+      <Ionicons name="menu" size={24} color="#000000" />
+    </TouchableOpacity>
   </View>
+</View>
 
     {/* Scrollable Content */}
     <ScrollView style={styles.scrollContainer}
@@ -308,33 +309,37 @@ return (
 };
 
 const styles = StyleSheet.create({
-mainContainer: {
-  flex: 1,
-},
-headerContainer: {
-  marginTop: 20,
-  padding: 16,
-},
-scrollContainer: {
-  flex: 1,
-},
-headerContent: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between', // Changed to space-between
-},
-headerTextContainer: {
-  flex: 1,
-  alignItems: 'center',
-},
-headerText: {
-  fontSize: 20,
-  fontWeight: '600',
-},
-menuButton: {
-  padding: 4,
-},
-
+  mainContainer: {
+    flex: 1,
+  },
+  headerContainer: {
+    paddingTop: Platform.OS === 'ios' ? 70 : 50,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'center', // Center all content
+    alignItems: 'center',
+    position: 'relative', // For absolute positioning of children
+    height: 40, // Define a fixed height for the header
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: '600',
+    position: 'absolute', // Absolutely position the text
+    left: 0,
+    right: 0,
+    textAlign: 'center', // Center the text itself
+  },
+  menuButton: {
+    padding: 4,
+    position: 'absolute', // Absolutely position the button
+    right: 0, // Place at the right edge
+  },
 });
 
 export default UserProfileScreen;

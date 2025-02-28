@@ -1,47 +1,48 @@
 {
-	"expo": {
-		"name": "AcademiGig",
-		"slug": "AcademiGig",
-		"scheme": "AcademiGig",
-		"version": "1.0.0",
-		"orientation": "portrait",
-		"icon": "./assets/icon.png",
-		"userInterfaceStyle": "light",
-		"splash": {
-			"image": "./assets/splash.png",
-			"resizeMode": "contain",
-			"backgroundColor": "#ffffff"
-		},
-		"ios": {
-			"supportsTablet": true
-		},
-		"android": {
-			"config": {
-				"googleMaps": {
-					"apiKey": "api key here"
-				}
-			},
-			"softwareKeyboardLayoutMode": "pan",
-			"adaptiveIcon": {
-				"foregroundImage": "/assets/splash.png",
-				"backgroundColor": "#ffffff"
-			},
-			"package": "com.anonymous.myapp"
-		},
-		"web": {
-			"favicon": "./assets/splash.png"
-		},
-		"plugins": [
-			"expo-router",
-			"expo-font"
-		],
-		"extra": {
-			"router": {
-				"origin": false
-			},
-			"eas": {
-				"projectId": "b3a4e4ba-5f5a-40c5-be86-30e2227a1887"
-			}
-		}
-	}
+  "expo": {
+    "name": "AcademiGig",
+    "slug": "AcademiGig",
+    "scheme": "AcademiGig",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.myapp"
+    },
+    "android": {
+      "config": {
+        "googleMaps": {
+          "apiKey": "key here"
+        }
+      },
+      "softwareKeyboardLayoutMode": "pan",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/splash.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.anonymous.myapp"
+    },
+    "web": {
+      "favicon": "./assets/splash.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "b3a4e4ba-5f5a-40c5-be86-30e2227a1887"
+      }
+    }
+  }
 }
