@@ -6,9 +6,10 @@ import { BasicInfoForm, AboutForm, SkillsForm, ExperienceForm, ResumeUploadForm 
 import { updateProfile, getUserProfile, getPresignedUrl, uploadFileToS3,validateFileSize } from '../../api/userapi';
 import CustomDrawer from '../../components/Profile/drawer';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const UserProfileScreen = () => {
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+  const router = useRouter();
 
   const [profile, setProfile] = useState({
     name: '',
@@ -189,20 +190,20 @@ const handleResumeUpload = async (resumeUri) => {
 };
 return (
   <View style={styles.mainContainer}>
-    {/* Sticky Header */}
-    <View style={styles.headerContainer}>
-      <View style={styles.headerContent}>
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.headerText}>Profile</Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => setIsDrawerOpen(true)}
-          style={styles.menuButton}
-        >
-          <Ionicons name="menu" size={24} color="#000000" />
-        </TouchableOpacity>
+  {/* Sticky Header */}
+  <View style={styles.headerContainer}>
+    <View style={styles.headerContent}>
+      <View style={styles.headerTextContainer}>
+        <Text style={styles.headerText}>Profile</Text>
       </View>
+      <TouchableOpacity
+        onPress={() => router.push('/(DrawerScreens)/menu')}
+        style={styles.menuButton}
+      >
+        <Ionicons name="menu" size={24} color="#000000" />
+      </TouchableOpacity>
     </View>
+  </View>
 
     {/* Scrollable Content */}
     <ScrollView style={styles.scrollContainer}
@@ -302,11 +303,7 @@ return (
         />
       </ProfileSection>
     </ScrollView>
-    <CustomDrawer
-          isOpen={isDrawerOpen}
-          onClose={() => setIsDrawerOpen(false)}
-        />
-  </View>
+  </View >
 );
 };
 

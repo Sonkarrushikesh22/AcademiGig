@@ -12,6 +12,11 @@ const DrawerLayout = () => {
         {title: 'Applied Jobs'}
       }
       />
+       <Stack.Screen name="menu"
+      options={
+        {title: 'Menu'}
+      }
+      />
     </Stack>
   )
 }
