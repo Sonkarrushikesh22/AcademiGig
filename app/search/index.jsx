@@ -318,6 +318,8 @@ const JobsSearchPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginBottom:-35,
+    paddingBottom:30
   },
   resultsCount: {
     marginTop: 8,
