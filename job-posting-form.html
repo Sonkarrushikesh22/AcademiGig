@@ -317,437 +317,486 @@
     </div>
 
     <script>
-      // Logo upload handling
-      async function handleLogoUpload(file) {
-        try {
-          const token = localStorage.getItem("token");
-          const params = new URLSearchParams({
-            fileType: "job-logo",
-            filename: file.name,
-            contentType: file.type,
+   // Logo upload handling
+async function handleLogoUpload(file) {
+  try {
+    const token = localStorage.getItem("token");
+    const params = new URLSearchParams({
+      fileType: "job-logo",
+      filename: file.name,
+      contentType: file.type,
+    });
+
+    // First, log the request details
+    console.log(
+      "Requesting presigned URL with params:",
+      params.toString()
+    );
+    console.log("Token:", token); // Make sure to mask this in production
+
+    const presignedUrlResponse = await fetch(
+      `http://localhost:8080/api/v1/employer/job-logo-upload-url?${params}`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!presignedUrlResponse.ok) {
+      if (presignedUrlResponse.status === 401) {
+        logout();
+        throw new Error("Session expired. Please login again.");
+      }
+      throw new Error(
+        `Failed to get upload URL: ${presignedUrlResponse.statusText}`
+      );
+    }
+
+    // Log the entire response for debugging
+    const responseData = await presignedUrlResponse.json();
+    console.log("Presigned URL Response:", responseData);
+
+    // Check the exact structure of your response
+    let uploadUrl;
+    if (responseData.url) {
+      uploadUrl = responseData.url;
+    } else if (responseData.uploadUrl) {
+      uploadUrl = responseData.uploadUrl;
+    } else if (responseData.presignedUrl) {
+      uploadUrl = responseData.presignedUrl;
+    } else {
+      throw new Error("No upload URL found in response");
+    }
+
+    if (!uploadUrl) {
+      throw new Error("Upload URL is undefined");
+    }
+
+    console.log("Using upload URL:", uploadUrl);
+
+    // Upload to S3
+    const uploadResponse = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type,
+      },
+      body: file,
+    });
+
+    console.log("Upload response status:", uploadResponse.status);
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error("Upload error response:", errorText);
+      throw new Error(
+        `Failed to upload file to S3. Status: ${uploadResponse.status}.Error: ${errorText}`
+      );
+    }
+
+    // Success handling
+    const progressBar = document.querySelector(".upload-progress-bar");
+    progressBar.style.width = "100%";
+
+    const errorMessage = document.querySelector("#errorMessage");
+    errorMessage.textContent = "";
+
+    // Log success and return the file URL
+    const fileUrl = uploadUrl.split("?")[0]; // Get the base S3 URL without the presigned parameters
+    console.log("Upload successful. File URL:", fileUrl);
+
+    return {
+      success: true,
+      fileUrl,
+    };
+  } catch (error) {
+    console.error("Error uploading logo:", error);
+
+    const errorMessage = document.querySelector("#errorMessage");
+    errorMessage.textContent = `Upload failed: ${error.message}`;
+
+    const progressBar = document.querySelector(".upload-progress-bar");
+    progressBar.style.width = "0%";
+
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+// Function to process image for upload (make square if not square)
+function processImageForUpload(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      const img = new Image();
+      
+      img.onload = () => {
+        // Check if image is square
+        const isSquare = img.width === img.height;
+        
+        if (isSquare) {
+          // If already square, just return the original file
+          resolve({
+            file: file,
+            isModified: false,
+            dimensions: `${img.width}x${img.height}`
           });
-
-          // First, log the request details
-          console.log(
-            "Requesting presigned URL with params:",
-            params.toString()
-          );
-          console.log("Token:", token); // Make sure to mask this in production
-
-          const presignedUrlResponse = await fetch(
-            `http://localhost:8080/api/v1/employer/job-logo-upload-url?${params}`,
-            {
-              method: "GET",
-              headers: {
-                Accept: "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          if (!presignedUrlResponse.ok) {
-            if (presignedUrlResponse.status === 401) {
-              logout();
-              throw new Error("Session expired. Please login again.");
-            }
-            throw new Error(
-              `Failed to get upload URL: ${presignedUrlResponse.statusText}`
-            );
-          }
-
-          // Log the entire response for debugging
-          const responseData = await presignedUrlResponse.json();
-          console.log("Presigned URL Response:", responseData);
-
-          // Check the exact structure of your response
-          let uploadUrl;
-          if (responseData.url) {
-            uploadUrl = responseData.url;
-          } else if (responseData.uploadUrl) {
-            uploadUrl = responseData.uploadUrl;
-          } else if (responseData.presignedUrl) {
-            uploadUrl = responseData.presignedUrl;
-          } else {
-            throw new Error("No upload URL found in response");
-          }
-
-          if (!uploadUrl) {
-            throw new Error("Upload URL is undefined");
-          }
-
-          console.log("Using upload URL:", uploadUrl);
-
-          // Upload to S3
-          const uploadResponse = await fetch(uploadUrl, {
-            method: "PUT",
-            headers: {
-              "Content-Type": file.type,
-            },
-            body: file,
-          });
-
-          console.log("Upload response status:", uploadResponse.status);
-
-          if (!uploadResponse.ok) {
-            const errorText = await uploadResponse.text();
-            console.error("Upload error response:", errorText);
-            throw new Error(
-              `Failed to upload file to S3. Status: ${uploadResponse.status}. Error: ${errorText}`
-            );
-          }
-
-          // Success handling
-          const progressBar = document.querySelector(".upload-progress-bar");
-          progressBar.style.width = "100%";
-
-          const errorMessage = document.querySelector("#errorMessage");
-          errorMessage.textContent = "";
-
-          // Log success and return the file URL
-          const fileUrl = uploadUrl.split("?")[0]; // Get the base S3 URL without the presigned parameters
-          console.log("Upload successful. File URL:", fileUrl);
-
-          return {
-            success: true,
-            fileUrl,
-          };
-        } catch (error) {
-          console.error("Error uploading logo:", error);
-
-          const errorMessage = document.querySelector("#errorMessage");
-          errorMessage.textContent = `Upload failed: ${error.message}`;
-
-          const progressBar = document.querySelector(".upload-progress-bar");
-          progressBar.style.width = "0%";
-
-          return {
-            success: false,
-            error: error.message,
-          };
+        } else {
+          // Create a square canvas
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Determine the square size (use the larger dimension)
+          const size = Math.max(img.width, img.height);
+          canvas.width = size;
+          canvas.height = size;
+          
+          // Fill canvas with white background
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, size, size);
+          
+          // Calculate centering position
+          const xOffset = (size - img.width) / 2;
+          const yOffset = (size - img.height) / 2;
+          
+          // Draw image centered on canvas
+          ctx.drawImage(img, xOffset, yOffset, img.width, img.height);
+          
+          // Convert to blob
+          canvas.toBlob((blob) => {
+            // Create a new file from the blob
+            const newFile = new File([blob], file.name, { type: 'image/jpeg' });
+            
+            resolve({
+              file: newFile,
+              isModified: true,
+              dimensions: `${img.width}x${img.height} → ${size}x${size}`
+            });
+          }, 'image/jpeg', 0.95);
         }
-      }
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Failed to load image'));
+      };
+      
+      img.src = event.target.result;
+    };
+    
+    reader.onerror = () => {
+      reject(new Error('Failed to read file'));
+    };
+    
+    reader.readAsDataURL(file);
+  });
+}
 
-      function uploadLogo() {
-        if (!isAuthenticated()) {
-          const errorMessage = document.querySelector("#errorMessage");
-          errorMessage.textContent = "Please login to upload files";
-          return;
+// Function to sanitize filename (remove spaces and special characters)
+function sanitizeFileName(filename) {
+  // Replace spaces with underscores and remove special characters
+  const sanitized = filename
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_.-]/g, '')
+    .toLowerCase();
+  
+  // Add timestamp to ensure uniqueness
+  const timestamp = Date.now();
+  const extension = sanitized.substring(sanitized.lastIndexOf('.')) || '.jpg';
+  const baseName = sanitized.substring(0, sanitized.lastIndexOf('.')) || sanitized;
+  
+  return `${baseName}_${timestamp}${extension}`;
+}
+
+// Complete function that handles the entire logo upload process
+async function uploadLogo(file) {
+  try {
+    const progressBar = document.querySelector(".upload-progress-bar");
+    const errorMessage = document.getElementById("errorMessage");
+    
+    // Create or reuse status container
+    let statusContainer = document.querySelector(".upload-status");
+    if (!statusContainer) {
+      statusContainer = document.createElement("div");
+      statusContainer.className = "upload-status";
+      // Insert status container after the progress bar
+      document.querySelector(".upload-progress").after(statusContainer);
+    } else {
+      statusContainer.innerHTML = ''; // Clear previous status
+    }
+    
+    progressBar.style.width = "0%";
+    errorMessage.textContent = "";
+    statusContainer.innerHTML = "<p>Processing image...</p>";
+    
+    // Process the image (square check/conversion)
+    const processedImage = await processImageForUpload(file);
+    
+    if (processedImage.isModified) {
+      statusContainer.innerHTML = `<p style="color:#ff8c00">Image adjusted to square format (${processedImage.dimensions})</p>`;
+    } else {
+      statusContainer.innerHTML = `<p style="color:#008000">Image is already square (${processedImage.dimensions})</p>`;
+    }
+    
+    // Sanitize the filename
+    const originalName = processedImage.file.name;
+    const sanitizedName = sanitizeFileName(originalName);
+    
+    if (originalName !== sanitizedName) {
+      statusContainer.innerHTML += `<p style="color:#ff8c00">Filename sanitized: ${sanitizedName}</p>`;
+    }
+    
+    // Create a new file with the sanitized name
+    const fileToUpload = new File(
+      [processedImage.file], 
+      sanitizedName, 
+      { type: processedImage.file.type }
+    );
+    
+    progressBar.style.width = "30%";
+    statusContainer.innerHTML += "<p>Uploading logo...</p>";
+    
+    // Perform the upload with the processed image
+    const uploadResult = await handleLogoUpload(fileToUpload);
+    
+    if (uploadResult.success) {
+      const fileUrl = uploadResult.fileUrl;
+      // Extract the key from the file URL
+      const uploadedFileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+      console.log("Uploaded file key:", uploadedFileName);
+      
+      progressBar.style.width = "100%";
+      errorMessage.style.color = "#4caf50";  // Green
+      errorMessage.textContent = "Logo uploaded successfully!";
+      statusContainer.innerHTML = `<p style="color:#4caf50">✓ Logo uploaded successfully!</p>`;
+      
+      setTimeout(() => {
+        progressBar.style.width = "0%";
+      }, 2000);
+      
+      return {
+        success: true,
+        fileUrl,
+        fileName: uploadedFileName
+      };
+    } else {
+      throw new Error(uploadResult.error || "Failed to upload the logo");
+    }
+  } catch (error) {
+    console.error("Upload error:", error);
+    const errorMessage = document.getElementById("errorMessage");
+    const statusContainer = document.querySelector(".upload-status");
+    const progressBar = document.querySelector(".upload-progress-bar");
+    
+    errorMessage.style.color = "#dc3545";  // Red
+    errorMessage.textContent = `Upload failed: ${error.message}`;
+    
+    if (statusContainer) {
+      statusContainer.innerHTML = `<p style="color:#dc3545">✗ Upload failed: ${error.message}</p>`;
+    }
+    
+    progressBar.style.width = "0%";
+    
+    return { success: false, error: error.message };
+  }
+}
+
+// Form handling
+document.addEventListener("DOMContentLoaded", () => {
+  // Add CSS for upload status messages
+  const style = document.createElement('style');
+  style.textContent = `
+    .upload-status {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .upload-status p {
+      margin: 5px 0;
+    }
+  `;
+  document.head.appendChild(style);
+  
+  const jobForm = document.getElementById("jobPostForm");
+  const logoInput = document.getElementById("logoInput");
+  const previewImage = document.getElementById("previewImage");
+  const skillInput = document.getElementById("skillInput");
+  const skillsContainer = document.getElementById("skillsContainer");
+  let uploadedFileName = null;
+  let skills = new Set();
+
+  // Logo preview and upload
+  logoInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Show original image preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImage.src = e.target.result;
+        previewImage.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+      
+      // Process and upload the image
+      const result = await uploadLogo(file);
+      if (result.success) {
+        uploadedFileName = result.fileName;
+      }
+    }
+  });
+
+  // Skills handling
+  skillInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const skill = skillInput.value.trim();
+      if (skill && !skills.has(skill)) {
+        skills.add(skill);
+        addSkillTag(skill);
+        skillInput.value = "";
+      }
+    }
+  });
+
+  function addSkillTag(skill) {
+    const tag = document.createElement("div");
+    tag.className = "skill-tag";
+    tag.innerHTML = `
+      ${skill}
+      <button type="button" onclick="removeSkill(this, '${skill}')">&times;</button>
+    `;
+    skillsContainer.appendChild(tag);
+  }
+
+  window.removeSkill = function (button, skill) {
+    skills.delete(skill);
+    button.parentElement.remove();
+  };
+
+  // Form submission
+  jobForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!uploadedFileName) {
+      alert("Please upload a company logo.");
+      return;
+    }
+
+    const city = document.getElementById("locationCity").value.trim();
+    const state = document.getElementById("locationState").value.trim();
+    const country = document.getElementById("locationCountry").value.trim();
+    const latitude = document.getElementById("latitude").value.trim();
+    const longitude = document.getElementById("longitude").value.trim();
+    const remote = document.getElementById("remote").checked;
+
+    if (!city && !state && !country && !remote) {
+      alert(
+        "Please provide at least one location detail or mark the job as remote."
+      );
+      return;
+    }
+    
+    const salaryMin = parseInt(
+      document.getElementById("salaryMin").value
+    );
+    const salaryMax = parseInt(
+      document.getElementById("salaryMax").value
+    );
+
+    if (
+      isNaN(salaryMin) ||
+      isNaN(salaryMax) ||
+      salaryMin <= 0 ||
+      salaryMax <= 0 ||
+      salaryMin > salaryMax
+    ) {
+      alert("Please enter valid salary range (min and max) values.");
+      return;
+    }
+    
+    const applicationDeadline = document
+      .getElementById("deadline")
+      .value.trim();
+    if (applicationDeadline && isNaN(Date.parse(applicationDeadline))) {
+      alert("Please enter a valid application deadline date.");
+      return;
+    }
+
+    const formData = {
+      title: document.getElementById("jobTitle").value.trim(),
+      company: document.getElementById("companyName").value.trim(),
+      companyLogoKey: uploadedFileName,
+      description: document.getElementById("jobDescription").value.trim(),
+      requirements: document
+        .getElementById("requirements")
+        .value.trim()
+        .split("\n")
+        .filter((req) => req),
+      responsibilities: document
+        .getElementById("responsibilities")
+        .value.trim()
+        .split("\n")
+        .filter((res) => res),
+      salary: {
+        min: salaryMin,
+        max: salaryMax,
+        currency:
+          document.getElementById("currency").value.trim() || "USD",
+      },
+      location: {
+        city,
+        state,
+        country,
+        coordinates: [longitude, latitude], 
+        remote,
+      },
+      jobType: document.getElementById("jobType").value,
+      category: document.getElementById("category").value,
+      applicationDeadline: applicationDeadline || null,
+      experienceLevel: document.getElementById("experience").value,
+      skills: Array.from(skills),
+    };
+
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/v1/employer/createjob",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(formData),
         }
+      );
 
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = "image/*";
-
-        fileInput.addEventListener("change", async (event) => {
-          const file = event.target.files[0];
-          if (!file) return;
-
-          // Validate file type
-          if (!file.type.startsWith("image/")) {
-            const errorMessage = document.querySelector("#errorMessage");
-            errorMessage.textContent = "Please select an image file";
-            return;
-          }
-
-          // Validate file size (5MB)
-          const MAX_FILE_SIZE = 5 * 1024 * 1024;
-          if (file.size > MAX_FILE_SIZE) {
-            const errorMessage = document.querySelector("#errorMessage");
-            errorMessage.textContent = "File size must be less than 5MB";
-            return;
-          }
-
-          const progressBar = document.querySelector(".upload-progress-bar");
-          progressBar.style.width = "50%";
-
-          // Add loading state
-          const uploadButton = document.querySelector("#uploadButton"); // Add id="uploadButton" to your upload button
-          if (uploadButton) {
-            uploadButton.disabled = true;
-            uploadButton.textContent = "Uploading...";
-          }
-
-          try {
-            const result = await handleLogoUpload(file);
-
-            if (result.success) {
-              // Handle successful upload
-              const successMessage = document.querySelector("#errorMessage");
-              successMessage.style.color = "green";
-              successMessage.textContent = "File uploaded successfully!";
-            }
-          } finally {
-            // Reset button state
-            if (uploadButton) {
-              uploadButton.disabled = false;
-              uploadButton.textContent = "Upload Logo";
-            }
-          }
-        });
-
-        fileInput.click();
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
       }
 
-      // Helper to check the response structure
-      function debugResponse(response) {
-        console.log(
-          "Response Headers:",
-          Array.from(response.headers.entries())
-        );
-        console.log("Response Status:", response.status);
-        return response.text().then((text) => {
-          try {
-            return JSON.parse(text);
-          } catch (e) {
-            console.log("Raw Response:", text);
-            throw new Error("Failed to parse response as JSON");
-          }
-        });
+      const result = await response.json();
+      alert("Job posted successfully!");
+      jobForm.reset();
+      previewImage.style.display = "none";
+      skillsContainer.innerHTML = "";
+      skills.clear();
+      uploadedFileName = null;
+      
+      // Clear upload status
+      const statusContainer = document.querySelector(".upload-status");
+      if (statusContainer) {
+        statusContainer.innerHTML = "";
       }
-
-      // Add upload progress tracking
-      async function uploadLogoWithProgress() {
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = "image/jpeg";
-
-        fileInput.addEventListener("change", async (event) => {
-          const file = event.target.files[0];
-          if (!file) return;
-
-          // Validate file type
-          if (!file.type.startsWith("image/jpeg")) {
-            const errorMessage = document.querySelector("#errorMessage");
-            errorMessage.textContent = "Please select an image file.";
-            return;
-          }
-
-          // Validate file size (e.g., 5MB limit)
-          const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-          if (file.size > MAX_FILE_SIZE) {
-            const errorMessage = document.querySelector("#errorMessage");
-            errorMessage.textContent = "File size must be less than 5MB.";
-            return;
-          }
-
-          const progressBar = document.querySelector(".upload-progress-bar");
-          progressBar.style.width = "50%";
-
-          await handleLogoUpload(file);
-        });
-
-        fileInput.click();
-      }
-
-      // Debugging helper
-      function logUploadError(error, uploadUrl, file) {
-        console.error("Upload Error Details:");
-        console.error("Error:", error);
-        console.error("Presigned URL:", uploadUrl);
-        console.error("File details:", {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-        });
-      }
-
-      // Form handling
-      document.addEventListener("DOMContentLoaded", () => {
-        const jobForm = document.getElementById("jobPostForm");
-        const logoInput = document.getElementById("logoInput");
-        const previewImage = document.getElementById("previewImage");
-        const progressBar = document.querySelector(".upload-progress-bar");
-        const errorMessage = document.getElementById("errorMessage");
-        const skillInput = document.getElementById("skillInput");
-        const skillsContainer = document.getElementById("skillsContainer");
-        let uploadedFileName = null;
-        let skills = new Set();
-
-        // Logo preview and upload
-        logoInput.addEventListener("change", (e) => {
-          const file = e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              previewImage.src = e.target.result;
-              previewImage.style.display = "block";
-            };
-            reader.readAsDataURL(file);
-            uploadLogo(file);
-          }
-        });
-
-        async function uploadLogo(file) {
-          try {
-            progressBar.style.width = "0%";
-            errorMessage.textContent = "";
-            progressBar.style.width = "30%";
-
-            const uploadResult = await handleLogoUpload(file); // Await the upload response
-            if (uploadResult.success) {
-              const fileUrl = uploadResult.fileUrl;
-              // Extract the key from the file URL (e.g., "job-logos/logo.png")
-              uploadedFileName = fileUrl.substring(
-                fileUrl.lastIndexOf("/") + 1
-              );
-              console.log("Uploaded file key:", uploadedFileName);
-            } else {
-              throw new Error("Failed to upload the logo");
-            }
-
-            progressBar.style.width = "100%";
-            setTimeout(() => {
-              progressBar.style.width = "0%";
-            }, 1000);
-          } catch (error) {
-            errorMessage.textContent = error.message;
-            progressBar.style.width = "0%";
-            previewImage.style.display = "none";
-          }
-        }
-
-        // Skills handling
-        skillInput.addEventListener("keypress", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            const skill = skillInput.value.trim();
-            if (skill && !skills.has(skill)) {
-              skills.add(skill);
-              addSkillTag(skill);
-              skillInput.value = "";
-            }
-          }
-        });
-
-        function addSkillTag(skill) {
-          const tag = document.createElement("div");
-          tag.className = "skill-tag";
-          tag.innerHTML = `
-                    ${skill}
-                    <button type="button" onclick="removeSkill(this, '${skill}')">&times;</button>
-                `;
-          skillsContainer.appendChild(tag);
-        }
-
-        window.removeSkill = function (button, skill) {
-          skills.delete(skill);
-          button.parentElement.remove();
-        };
-
-        // Form submission
-        jobForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          if (!uploadedFileName) {
-            alert("Please upload a company logo.");
-            return;
-          }
-
-          const locationInput = document.getElementById("location")
-          const city = document.getElementById("locationCity").value.trim();
-          const state = document.getElementById("locationState").value.trim();
-          const country = document.getElementById("locationCountry").value.trim();
-          const  latitude = document.getElementById("latitude").value.trim();
-          const longitude = document.getElementById("longitude").value.trim();
-          const remote = document.getElementById("remote").checked;
-
-          if (!city && !state && !country && !remote) {
-            alert(
-              "Please provide at least one location detail or mark the job as remote."
-            );
-            return;
-          }
-          const salaryMin = parseInt(
-            document.getElementById("salaryMin").value
-          );
-          const salaryMax = parseInt(
-            document.getElementById("salaryMax").value
-          );
-
-          if (
-            isNaN(salaryMin) ||
-            isNaN(salaryMax) ||
-            salaryMin <= 0 ||
-            salaryMax <= 0 ||
-            salaryMin > salaryMax
-          ) {
-            alert("Please enter valid salary range (min and max) values.");
-            return;
-          }
-          const applicationDeadline = document
-            .getElementById("deadline")
-            .value.trim();
-          if (applicationDeadline && isNaN(Date.parse(applicationDeadline))) {
-            alert("Please enter a valid application deadline date.");
-            return;
-          }
-
-          const formData = {
-            title: document.getElementById("jobTitle").value.trim(),
-            company: document.getElementById("companyName").value.trim(),
-            companyLogoKey: uploadedFileName,
-            description: document.getElementById("jobDescription").value.trim(),
-            requirements: document
-              .getElementById("requirements")
-              .value.trim()
-              .split("\n")
-              .filter((req) => req),
-            responsibilities: document
-              .getElementById("responsibilities")
-              .value.trim()
-              .split("\n")
-              .filter((res) => res),
-            salary: {
-              min: salaryMin,
-              max: salaryMax,
-              currency:
-                document.getElementById("currency").value.trim() || "USD",
-            },
-            location: {
-              city,
-              state,
-              country,
-              coordinates: [longitude, latitude], 
-              remote,
-            },
-            jobType: document.getElementById("jobType").value,
-            category: document.getElementById("category").value,
-            applicationDeadline: applicationDeadline || null,
-            experienceLevel: document.getElementById("experience").value,
-            skills: Array.from(skills),
-          };
-
-          try {
-            const response = await fetch(
-              "http://localhost:8080/api/v1/employer/createjob",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-                body: JSON.stringify(formData),
-              }
-            );
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(errorText);
-            }
-
-            const result = await response.json();
-            alert("Job posted successfully!");
-            jobForm.reset();
-            previewImage.style.display = "none";
-            skillsContainer.innerHTML = "";
-            skills.clear();
-            uploadedFileName = null;
-          } catch (error) {
-            console.error("Error creating job:", error);
-            alert(`Failed to create job posting: ${error.message}`);
-          }
-        });
-      });
+    } catch (error) {
+      console.error("Error creating job:", error);
+      alert(`Failed to create job posting: ${error.message}`);
+    }
+  });
+});
     </script>
   </body>
 </html>
